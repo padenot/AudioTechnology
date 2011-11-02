@@ -18,6 +18,7 @@ and can handle a variety of formats, so it should be quite cool for the project.
 - Mac : `sudo port install git`
 
 Workflow :
+
 1. Edit files in the repository
 2. When you're finished, `git add filename1 filename2`
 3. Then `git commit -m"A useful message"`. At this point, `git` saved a snapshot
