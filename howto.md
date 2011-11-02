@@ -31,5 +31,3 @@ Workflow :
    -m"manual merge"`.
 5. Then `git push origin master` to send the changes to the `github.com`
    repository.
-
-// comment
