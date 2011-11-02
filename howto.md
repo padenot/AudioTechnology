@@ -20,7 +20,7 @@ and can handle a variety of formats, so it should be quite cool for the project.
 Workflow :
 
 1. Edit files in the repository
-2. When you're finished, `git add filename1 filename2`
+2. When you're done, `git add filename1 filename2`
 3. Then `git commit -m"A useful message"`. At this point, `git` saved a snapshot
    of the code tree (means that if you screw up, you can go back to this
    snapshot).
