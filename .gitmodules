@@ -1,0 +1,3 @@
+[submodule "vagg"]
+	path = vagg
+	url = http://github.com/padenot/vagg
