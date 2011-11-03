@@ -6,8 +6,7 @@ build for each operating system. You'll need a `C` compiler, and some libraries.
   - Windows → install MinGW \& Cygwin
   - MacOSX → install XCode, then `sudo port install portaudio`
   - basically the classic `./configure && make && sudo make install`
-- Examples are in `test/`. General line to compile : `gcc -lrt -lasound
--lpthread -lportaudio input.c`. `asound` must be replaced by the library
+- Examples are in `test/`. General line to compile : `gcc -lrt -lasound -lpthread -lportaudio input.c`. `asound` must be replaced by the library
 used by your system. This produce a `a.out` binary.
 
 # libsndfile
@@ -38,3 +37,4 @@ Workflow :
    repository.
 6. To get a library used for logging and other delicacies, do a `git submodule
    init` and a `git submodule update`, to get it.
+7. We're done! :D
