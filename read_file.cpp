@@ -19,18 +19,18 @@ const unsigned SAMPLERATE = 44100;
  */
 void read_file(const char* filename, vector<short>& samples)
 {
-  SF_INFO infos_read;
-  infos_read.samplerate = SAMPLERATE;
-  infos_read.channels = CHANNELS;
-  infos_read.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+	SF_INFO infos_read;
+	infos_read.samplerate = SAMPLERATE;
+	infos_read.channels = CHANNELS;
+	infos_read.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
 
-  VAGG_SYSCALL(sf_format_check(&infos_read));
+	VAGG_SYSCALL(sf_format_check(&infos_read));
 
-  SNDFILE *file = sf_open(filename, SFM_READ, &infos_read);
-  if (file == NULL) {
-    VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file));
-    abort();
-  }
+	SNDFILE *file = sf_open(filename, SFM_READ, &infos_read);
+	if (file == NULL) {
+		VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file));
+		abort();
+	}
 
 	size_t count = 0;
 	do {
@@ -39,9 +39,9 @@ void read_file(const char* filename, vector<short>& samples)
 		samples.insert(samples.end(), tmp, tmp + count);
 	} while (count == CHUNK_SIZE*CHANNELS);
 
-  if (sf_close(file) != 0) {
-    fprintf(stderr, "Error while closing the file.");
-  }
+	if (sf_close(file) != 0) {
+		fprintf(stderr, "Error while closing the file.");
+	}
 }
 
 int main(void)
