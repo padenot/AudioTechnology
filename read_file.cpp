@@ -6,7 +6,7 @@
 
 using namespace std;
 
-const char* FILENAME = "amen.wav";
+const char* FILENAME = "assets/amen.wav";
 const size_t CHUNK_SIZE = 2*4096;
 const size_t CHANNELS = 2;
 const unsigned SAMPLERATE = 44100;
