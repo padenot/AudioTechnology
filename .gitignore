@@ -1,3 +1,6 @@
 read_file
 *.o
 tags
+bin/*
+obj/*
+recordings/*
