@@ -25,8 +25,8 @@ BIN=bin
 DOC=doc
 # Directory for the report
 REPORT=report
-# Name of the final binary
-EXE=
+# Directories to create
+DIRS=obj recordings bin
 
 # Libraries
 # Dynamic libraries to link with
@@ -35,7 +35,7 @@ LDFLAGS=-lsndfile -lrt -lasound -lpthread -lportaudio -Wl,-rpath -Wl,/usr/local/
 STATIC=
 
 # Rules
-$(OBJ)/%.o : $(SRC)/%.cpp $(SRC)/%.h #$(STATIC) $(LDFLAGS)
+$(OBJ)/%.o : $(SRC)/%.cpp $(SRC)/%.h
 	@echo "${COL_ON}Compiling $< ...${COL_OFF}"
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) -c $< -o $@
 
@@ -53,7 +53,6 @@ $(BIN)/%: $(OBJ)/%.o
 
 # Targets
 all : $(BIN)/read_file $(BIN)/write_file
-	@echo "Building $<"
 
 clean :
 	@echo "Cleaning $(BIN) & $(OBJ)"
@@ -65,13 +64,9 @@ mrproper:
 	rm -r $(BIN)/* $(OBJ)/* $(DOC)/*
 	@echo "Project directories are now clean."
 
-doc:
-	@echo "Generating documentation for $(EXE)..."
-	doxygen
-	@echo "Documentation is now available in $(DOC)."
-
 # Dependencies
 # Format : $(OBJ)/*.o : [$(SRC)/*.hpp]+
 $(OBJ)/write_file.o: ${SRC}/write_file.cpp
 $(OBJ)/read_file.o: ${SRC}/read_file.cpp
 
+$(shell   mkdir -p $(DIRS))
