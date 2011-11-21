@@ -6,17 +6,8 @@
 #include "vagg/vagg_macros.h"
 #include <portaudio.h>
 #include <atomic>
-
-// Full memory barrier using GCC intrinsics (or equivalent on Mac), to avoid
-// using heavyweight synchronization like mutexes.
-#if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
-#   define SYNC() __sync_synchronize();
-#elif defined(__APPLE__)
-#   include <libkern/OSAtomic.h>
-#   define SYNC()  OSMemoryBarrier()
-#else
-#   error "This works only with a good enough GCC (>=4.1) or a Mac (maybe)."
-#endif
+#include "AudioBuffersQueue.hpp"
+#include "types.hpp"
 
 using namespace std;
 
@@ -33,58 +24,6 @@ const unsigned EVENT_LOOP_FREQUENCY = 50;
 #define STOPPED 3
 
 atomic<int> playback_state;
-
-typedef float SamplesType ;
-typedef vector<SamplesType> AudioBuffer;
-
-typedef list<AudioBuffer*> BufferList;
-
-class AudioBuffersQueue {
-  public:
-    AudioBuffersQueue(size_t chunk_size)
-    :chunks_size_(chunk_size)
-    { }
-    size_t available() {
-      SYNC();
-      if (buffers_.empty()) {
-        return 0;
-      }
-      return buffers_.size() * (chunks_size_ - 1) + buffers_.back()->size();
-    }
-    void push(AudioBuffer* buffer)
-    {
-      SYNC();
-      buffers_.push_back(buffer);
-      clean();
-    }
-    AudioBuffer* pop()
-    {
-      AudioBuffer* b = buffers_.front();
-      buffers_.pop_front();
-      return b;
-    }
-    void dispose(AudioBuffer* buffer)
-    {
-      dirty_buffers_.push_back(buffer);
-    }
-
-    void close()
-    {
-      clean();
-    }
-  private:
-    void clean()
-    {
-      while(! dirty_buffers_.empty()) {
-        AudioBuffer* b = dirty_buffers_.front();
-        dirty_buffers_.pop_front();
-        delete b;
-      }
-    }
-    BufferList buffers_;
-    BufferList dirty_buffers_;
-    const size_t chunks_size_;
-};
 
 class AudioFile
 {

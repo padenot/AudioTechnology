@@ -1,11 +1,6 @@
 COL_ON = \033[0;32m
 COL_OFF = \033[m
 
-
-%.o : %.cpp ${LIBS}
-	echo "${COL_ON}Compiling $< ${COL_OFF}"
-	$(CC) $(CXXFLAGS) -c $< -o $@
-
 #Variables
 # Compiler to use
 CXX=g++
@@ -35,7 +30,7 @@ LDFLAGS=-lsndfile -lrt -lasound -lpthread -lportaudio -Wl,-rpath -Wl,/usr/local/
 STATIC=
 
 # Rules
-$(OBJ)/%.o : $(SRC)/%.cpp $(SRC)/%.h
+$(OBJ)/%.o : $(SRC)/%.cpp $(SRC)/%.hpp
 	@echo "${COL_ON}Compiling $< ...${COL_OFF}"
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) -c $< -o $@
 
@@ -64,10 +59,15 @@ mrproper:
 	rm -r $(BIN)/* $(OBJ)/* $(DOC)/*
 	@echo "Project directories are now clean."
 
+$(BIN)/read_file_buffer: $(OBJ)/read_file_buffer.o $(OBJ)/AudioBuffersQueue.o
+	@echo "${COL_ON}Linking $< ...${COL_OFF}"
+	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -o $@
+
 # Dependencies
 # Format : $(OBJ)/*.o : [$(SRC)/*.hpp]+
 $(OBJ)/write_file.o: ${SRC}/write_file.cpp
 $(OBJ)/read_file.o: ${SRC}/read_file.cpp
 $(OBJ)/read_file_buffer.o: ${SRC}/read_file_buffer.cpp
+$(OBJ)/AudioBuffersQueue.o: ${SRC}/AudioBuffersQueue.cpp
 
 $(shell   mkdir -p $(DIRS))
