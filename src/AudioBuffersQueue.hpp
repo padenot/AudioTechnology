@@ -1,5 +1,5 @@
-#ifndef AUDIOBUFFERSQUEUE_H
-#define AUDIOBUFFERSQUEUE_H
+#ifndef AUDIOBUFFERSQUEUE_HPP
+#define AUDIOBUFFERSQUEUE_HPP
 
 #include "vagg/vagg_macros.h"
 #include "types.hpp"

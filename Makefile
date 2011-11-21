@@ -30,21 +30,9 @@ LDFLAGS=-lsndfile -lrt -lasound -lpthread -lportaudio -Wl,-rpath -Wl,/usr/local/
 STATIC=
 
 # Rules
-$(OBJ)/%.o : $(SRC)/%.cpp $(SRC)/%.hpp
-	@echo "${COL_ON}Compiling $< ...${COL_OFF}"
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) -c $< -o $@
-
 $(OBJ)/%.o : $(SRC)/%.cpp
 	@echo "${COL_ON}Compiling $< ...${COL_OFF}"
-	$(CXX) $(CPPFLAGS)  $(LDFLAGS) -c $< $(STATIC) -o $@
-
-$(OBJ)/%.o : $(SRC)/%.h
-	@echo "${COL_ON}Compiling $< ...${COL_OFF}"
-	$(CXX) $(CPPFLAGS)  $(LDFLAGS) -c $< $(STATIC) -o $@
-
-$(BIN)/%: $(OBJ)/%.o
-	@echo "${COL_ON}Linking $< ...${COL_OFF}"
-	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -o $@
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) -c $< -o $@
 
 # Targets
 all : $(BIN)/read_file $(BIN)/write_file $(BIN)/read_file_buffer
@@ -59,15 +47,24 @@ mrproper:
 	rm -r $(BIN)/* $(OBJ)/* $(DOC)/*
 	@echo "Project directories are now clean."
 
-$(BIN)/read_file_buffer: $(OBJ)/read_file_buffer.o $(OBJ)/AudioBuffersQueue.o
+$(BIN)/read_file_buffer: $(OBJ)/read_file_buffer.o $(OBJ)/AudioBuffersQueue.o $(OBJ)/AudioFile.o
+	@echo "${COL_ON}Linking $< ...${COL_OFF}"
+	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -o $@
+
+$(BIN)/read_file: $(OBJ)/read_file.o
+	@echo "${COL_ON}Linking $< ...${COL_OFF}"
+	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -o $@
+
+$(BIN)/write_file: $(OBJ)/write_file.o
 	@echo "${COL_ON}Linking $< ...${COL_OFF}"
 	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -o $@
 
 # Dependencies
 # Format : $(OBJ)/*.o : [$(SRC)/*.hpp]+
-$(OBJ)/write_file.o: ${SRC}/write_file.cpp
-$(OBJ)/read_file.o: ${SRC}/read_file.cpp
-$(OBJ)/read_file_buffer.o: ${SRC}/read_file_buffer.cpp
-$(OBJ)/AudioBuffersQueue.o: ${SRC}/AudioBuffersQueue.cpp
+$(OBJ)/write_file.o: $(SRC)/write_file.cpp
+$(OBJ)/read_file.o: $(SRC)/read_file.cpp
+$(OBJ)/read_file_buffer.o: $(SRC)/read_file_buffer.cpp
+$(OBJ)/AudioBuffersQueue.o: $(SRC)/AudioBuffersQueue.cpp
+$(OBJ)/AudioFile.o: $(SRC)/AudioFile.cpp
 
-$(shell   mkdir -p $(DIRS))
+$(shell mkdir -p $(DIRS))

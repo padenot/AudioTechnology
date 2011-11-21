@@ -7,11 +7,12 @@
 #include <portaudio.h>
 #include <atomic>
 #include "AudioBuffersQueue.hpp"
+#include "AudioFile.hpp"
 #include "types.hpp"
 
 using namespace std;
 
-const char* FILENAME = "assets/amen.wav";
+const char* FILENAME = "assets/pod159.wav";
 const size_t CHUNK_SIZE = 2*4096;
 const size_t CHANNELS = 2;
 const unsigned SAMPLERATE = 44100;
@@ -24,74 +25,6 @@ const unsigned EVENT_LOOP_FREQUENCY = 50;
 #define STOPPED 3
 
 atomic<int> playback_state;
-
-class AudioFile
-{
-  public:
-  AudioFile(const char* filename,
-            size_t chunk_size = FRAMES_PER_BUFFER,
-            int samplerate = 44100,
-            int channels = 2,
-            int format = SF_FORMAT_WAV|SF_FORMAT_PCM_16) 
-    :filename_(filename),
-     chunk_size_(chunk_size)
-  {
-    infos_.samplerate = samplerate;
-    infos_.channels = channels;
-    infos_.format = format;
-    VAGG_SYSCALL(sf_format_check(&infos_));
-  }
-  ~AudioFile()
-  {
-    if (sf_close(file_) != 0) {
-      VAGG_LOG(VAGG_LOG_OK, "Error while closing the file.");
-    } else {
-      VAGG_LOG(VAGG_LOG_OK, "File %s closed.", filename_);
-    }
-  }
-  void open() 
-  {
-    file_ = sf_open(filename_, SFM_READ, &infos_);
-    if (file_ == NULL) {
-      VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
-      abort();
-    } else {
-      VAGG_LOG(VAGG_LOG_OK, "File %s opened", filename_);
-    }
-  }
-  /**
-   * @brief Read some data from the file.
-   *
-   * @param buffer The buffer in which we should take the data.
-   *
-   * @return  The number of samples retrieved from the file.
-   */
-  size_t read_some(AudioBuffer& buffer)
-  {
-    size_t count;
-    count = sf_read_float(file_, &buffer.front(), chunk_size_ * infos_.channels);
-    //VAGG_LOG(VAGG_LOG_DEBUG, "%zu samples read.", count);
-    return count;
-  }
-  protected:
-  /**
-   * @brief The file handle, for libsndfile.
-   */
-  SNDFILE* file_;
-  /**
-   * @brief The infos of the file, such as samplerate, samples format and
-   * number of channels.
-   */
-  SF_INFO infos_;
-  /**
-   * @brief The filename.
-   */
-  const char* filename_;
-  /**
-   * @brief The size of the buffers used.
-   */
-  const size_t chunk_size_;
-};
 
 /**
  * @brief The main callback that will push audio samples to the system's audio backend.
