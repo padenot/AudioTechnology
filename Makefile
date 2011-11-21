@@ -52,7 +52,7 @@ $(BIN)/%: $(OBJ)/%.o
 	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -o $@
 
 # Targets
-all : $(BIN)/read_file $(BIN)/write_file
+all : $(BIN)/read_file $(BIN)/write_file $(BIN)/read_file_buffer
 
 clean :
 	@echo "Cleaning $(BIN) & $(OBJ)"
@@ -68,5 +68,6 @@ mrproper:
 # Format : $(OBJ)/*.o : [$(SRC)/*.hpp]+
 $(OBJ)/write_file.o: ${SRC}/write_file.cpp
 $(OBJ)/read_file.o: ${SRC}/read_file.cpp
+$(OBJ)/read_file_buffer.o: ${SRC}/read_file_buffer.cpp
 
 $(shell   mkdir -p $(DIRS))
