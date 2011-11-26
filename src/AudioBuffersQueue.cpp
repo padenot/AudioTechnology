@@ -33,6 +33,7 @@ void AudioBuffersQueue::push(AudioBuffer* buffer)
 
 AudioBuffer* AudioBuffersQueue::pop()
 {
+	SYNC();
 	AudioBuffer* b = buffers_.front();
 	buffers_.pop_front();
 	return b;

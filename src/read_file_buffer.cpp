@@ -107,7 +107,7 @@ int main(void)
 
   AudioBuffersQueue queue(FRAMES_PER_BUFFER * 2);
   AudioFile a(FILENAME);
-  a.open();
+  a.open(AudioFile::Read);
 
   err = Pa_Initialize();
   if(err != paNoError) {

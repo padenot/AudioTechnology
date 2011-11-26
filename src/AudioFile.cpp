@@ -19,9 +19,9 @@ AudioFile::~AudioFile()
 	}
 }
 
-void AudioFile::open() 
+void AudioFile::open(const AudioFile::Mode mode) 
 {
-	file_ = sf_open(filename_, SFM_READ, &infos_);
+	file_ = sf_open(filename_, mode, &infos_);
 	if (file_ == NULL) {
 		VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
 		abort();
@@ -32,8 +32,31 @@ void AudioFile::open()
 
 size_t AudioFile::read_some(AudioBuffer& buffer)
 {
+  if (!file_) {
+    VAGG_LOG(VAGG_LOG_FATAL, "Could not call %s, file not opened.", __func__);
+    return -1;
+  }
 	size_t count;
 	count = sf_read_float(file_, &buffer.front(), chunk_size_ * infos_.channels);
-	//VAGG_LOG(VAGG_LOG_DEBUG, "%zu samples read.", count);
+  if (count != chunk_size_ * infos_.channels) {
+    VAGG_LOG(VAGG_LOG_WARNING, "Bar read, asked=%zu, written=%zu", chunk_size_ * infos_.channels, count);
+  }
 	return count;
+}
+
+size_t AudioFile::write_some(AudioBuffer& buffer)
+{
+  if (!file_) {
+    VAGG_LOG(VAGG_LOG_FATAL, "Could not call %s, file not opened.", __func__);
+    return -1;
+  }
+
+  VAGG_LOG(VAGG_LOG_DEBUG, "Size : %zu, channels : %d, chunk_size: %zu", buffer.size(), infos_.channels, chunk_size_);
+  VAGG_ASSERT(buffer.size() == chunk_size_ * infos_.channels, "Bad size for write_some");
+  size_t count;
+  count = sf_writef_float(file_, &buffer.front(), chunk_size_ * infos_.channels);
+  if (count != chunk_size_ * infos_.channels) {
+    VAGG_LOG(VAGG_LOG_WARNING, "Bad read, asked=%zu, written=%zu", chunk_size_ * infos_.channels, count);
+  }
+  return count;
 }

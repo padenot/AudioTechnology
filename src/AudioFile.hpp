@@ -10,13 +10,18 @@
 class AudioFile
 {
 	public:
+		enum Mode {
+			Write = SFM_WRITE,
+			Read = SFM_READ,
+			ReadWrite = SFM_RDWR
+		};
 		AudioFile(const char* filename,
 				size_t chunk_size = 4096,
 				int samplerate = 44100,
 				int channels = 2,
 				int format = SF_FORMAT_WAV|SF_FORMAT_PCM_16);
 		~AudioFile();
-		void open();
+		void open(Mode mode);
 		/**
 		 * @brief Read some data from the file.
 		 *
@@ -25,6 +30,12 @@ class AudioFile
 		 * @return  The number of samples retrieved from the file.
 		 */
 		size_t read_some(AudioBuffer& buffer);
+    /**
+     * @brief Write some data into a file.
+     *
+     * @param buffer The data to write in the file.
+     */
+    size_t write_some(AudioBuffer& buffer);
 	protected:
 		/**
 		 * @brief The file handle, for libsndfile.
@@ -43,6 +54,12 @@ class AudioFile
 		 * @brief The size of the buffers used.
 		 */
 		const size_t chunk_size_;
+
+		/**
+		 * @brief The mode in which the file has been opened (read, write,
+		 * readwrite).
+		 */
+		Mode mode_;
 };
 
 #endif
