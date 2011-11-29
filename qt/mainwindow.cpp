@@ -11,7 +11,7 @@
  
  using namespace std;
 
-const char* FILENAME = "assets/amen.wav";
+const char* FILENAME = "../assets/amen.wav";
 const size_t CHUNK_SIZE = 2*4096;
 const size_t CHANNELS = 2;
 const unsigned SAMPLERATE = 44100;
@@ -34,10 +34,12 @@ struct PlaybackStatus {
  MainWindow::MainWindow()
  {
   
-  	       
+  	 /*      
      audioOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
      mediaObject = new Phonon::MediaObject(this);
      metaInformationResolver = new Phonon::MediaObject(this);
+	
+
 
      mediaObject->setTickInterval(1000);
      connect(mediaObject, SIGNAL(tick(qint64)), this, SLOT(tick(qint64)));
@@ -47,7 +49,9 @@ struct PlaybackStatus {
      connect(mediaObject, SIGNAL(aboutToFinish()), this, SLOT(aboutToFinish()));
 
      Phonon::createPath(mediaObject, audioOutput);
-
+	*/
+	
+	
      setupActions();
      setupMenus();
      setupUi();
@@ -108,7 +112,7 @@ void read_file(const char* filename, AudioBuffer& samples)
    	timeLcd->display("23:42");
    	dbm->newval(qrand()%200);
    	AudioBuffer ab;
-   	read_file("amen.wav",ab);
+   	read_file("../assets/amen.wav",ab);
    	
  }
 
@@ -118,13 +122,14 @@ void read_file(const char* filename, AudioBuffer& samples)
  void MainWindow::about()
  {
      QMessageBox::information(this, tr("About Music Player"),
-         tr("This is the about text..."));
+         tr("This player is a demo for DT2410 Lab"));
  }
 
  void MainWindow::stateChanged(Phonon::State newState, Phonon::State /* oldState */)
  {
      switch (newState) {
          case Phonon::ErrorState:
+         /*
              if (mediaObject->errorType() == Phonon::FatalError) {
                  QMessageBox::warning(this, tr("Fatal Error"),
                  mediaObject->errorString());
@@ -132,6 +137,8 @@ void read_file(const char* filename, AudioBuffer& samples)
                  QMessageBox::warning(this, tr("Error"),
                  mediaObject->errorString());
              }
+             */
+             
              break;
          case Phonon::PlayingState:
                  playAction->setEnabled(false);
@@ -165,7 +172,7 @@ void read_file(const char* filename, AudioBuffer& samples)
 
  void MainWindow::tableClicked(int row, int /* column */)
  {
-     bool wasPlaying = mediaObject->state() == Phonon::PlayingState;
+     /*bool wasPlaying = mediaObject->state() == Phonon::PlayingState;
 
      mediaObject->stop();
      mediaObject->clearQueue();
@@ -178,7 +185,7 @@ void read_file(const char* filename, AudioBuffer& samples)
      if (wasPlaying)
          mediaObject->play();
      else
-         mediaObject->stop();
+         mediaObject->stop();*/
  }
 
  void MainWindow::sourceChanged(const Phonon::MediaSource &source)
@@ -209,8 +216,10 @@ void read_file(const char* filename, AudioBuffer& samples)
      if (title == "")
          title = metaInformationResolver->currentSource().fileName();
 
+	
      QTableWidgetItem *titleItem = new QTableWidgetItem(title);
      titleItem->setFlags(titleItem->flags() ^ Qt::ItemIsEditable);
+     /*
      QTableWidgetItem *artistItem = new QTableWidgetItem(metaData.value("ARTIST"));
      artistItem->setFlags(artistItem->flags() ^ Qt::ItemIsEditable);
      QTableWidgetItem *albumItem = new QTableWidgetItem(metaData.value("ALBUM"));
@@ -218,16 +227,20 @@ void read_file(const char* filename, AudioBuffer& samples)
      QTableWidgetItem *yearItem = new QTableWidgetItem(metaData.value("DATE"));
      yearItem->setFlags(yearItem->flags() ^ Qt::ItemIsEditable);
 
+	*/
+
      int currentRow = musicTable->rowCount();
      musicTable->insertRow(currentRow);
      musicTable->setItem(currentRow, 0, titleItem);
+     /*
      musicTable->setItem(currentRow, 1, artistItem);
      musicTable->setItem(currentRow, 2, albumItem);
      musicTable->setItem(currentRow, 3, yearItem);
+     */
 
      if (musicTable->selectedItems().isEmpty()) {
          musicTable->selectRow(0);
-         mediaObject->setCurrentSource(metaInformationResolver->currentSource());
+        // mediaObject->setCurrentSource(metaInformationResolver->currentSource());
      }
 
      Phonon::MediaSource source = metaInformationResolver->currentSource();
@@ -244,10 +257,10 @@ void read_file(const char* filename, AudioBuffer& samples)
 
  void MainWindow::aboutToFinish()
  {
-     int index = sources.indexOf(mediaObject->currentSource()) + 1;
+     /*int index = sources.indexOf(mediaObject->currentSource()) + 1;
      if (sources.size() > index) {
          mediaObject->enqueue(sources.at(index));
-     }
+     }*/
  }
 
  void MainWindow::setupActions()
@@ -273,11 +286,14 @@ void read_file(const char* filename, AudioBuffer& samples)
      exitAction->setShortcuts(QKeySequence::Quit);
      aboutAction = new QAction(tr("A&bout"), this);
      aboutAction->setShortcut(tr("Ctrl+B"));
-     aboutQtAction = new QAction(tr("About &Qt"), this);
+     aboutQtAction = new QAction(tr("About Qt"), this);
 
-     connect(playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
+    /* connect(playAction, SIGNAL(triggered()), mediaObject, SLOT(play()));
      connect(pauseAction, SIGNAL(triggered()), mediaObject, SLOT(pause()) );
      connect(stopAction, SIGNAL(triggered()), mediaObject, SLOT(stop()));
+     
+     */
+     
      connect(addFilesAction, SIGNAL(triggered()), this, SLOT(addFiles()));
      connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
      connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
@@ -307,19 +323,20 @@ void read_file(const char* filename, AudioBuffer& samples)
      bar->addAction(stopAction);
      bar->addAction(testAction);
 
+/*
      seekSlider = new Phonon::SeekSlider(this);
      seekSlider->setMediaObject(mediaObject);
-     
+  */   
      dbm = new dBMeter(this);
 //     connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(55)));
   //  connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(int)));
-
+/*
      volumeSlider = new Phonon::VolumeSlider(this);
      volumeSlider->setAudioOutput(audioOutput);
      volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-
-     QLabel *volumeLabel = new QLabel;
-     volumeLabel->setPixmap(QPixmap("images/volume.png"));
+*/
+//     QLabel *volumeLabel = new QLabel;
+//     volumeLabel->setPixmap(QPixmap("images/volume.png"));
 
      QPalette palette;
      palette.setBrush(QPalette::Light, Qt::darkGray);
@@ -328,9 +345,9 @@ void read_file(const char* filename, AudioBuffer& samples)
      timeLcd->setPalette(palette);
      
      QStringList headers;
-     headers << tr("Title") << tr("Artist") << tr("Album") << tr("Year");
+     headers << tr("Title");
 
-     musicTable = new QTableWidget(0, 4);
+     musicTable = new QTableWidget(0, 1);
      musicTable->setHorizontalHeaderLabels(headers);
      musicTable->setSelectionMode(QAbstractItemView::SingleSelection);
      musicTable->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -341,20 +358,25 @@ void read_file(const char* filename, AudioBuffer& samples)
              
 
      QHBoxLayout *seekerLayout = new QHBoxLayout;
-     seekerLayout->addWidget(seekSlider);
+     //seekerLayout->addWidget(seekSlider);
      seekerLayout->addWidget(timeLcd);
 
+	
      QHBoxLayout *playbackLayout = new QHBoxLayout;
      playbackLayout->addWidget(bar);
-     playbackLayout->addStretch();
-     playbackLayout->addWidget(volumeLabel);
-     playbackLayout->addWidget(volumeSlider);
+     //playbackLayout->addStretch();
+    //playbackLayout->addWidget(volumeLabel);
+    // playbackLayout->addWidget(volumeSlider);
+    
+     QHBoxLayout *mid = new QHBoxLayout;
+     mid->addWidget(musicTable);
+     mid->addLayout(dbmLayout);
 
      QVBoxLayout *mainLayout = new QVBoxLayout;
-     mainLayout->addWidget(musicTable);
+     mainLayout->addLayout(mid);
      mainLayout->addLayout(seekerLayout);
      mainLayout->addLayout(playbackLayout);
-     mainLayout->addLayout(dbmLayout);
+
      
 
      QWidget *widget = new QWidget;
