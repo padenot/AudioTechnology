@@ -3,7 +3,7 @@ COL_OFF = \033[m
 
 #Variables
 # Compiler to use
-CXX=g++
+CXX=g++-4.5
 # Flag for release mode
 RELEASE=-O2
 # Flag for debug mode

@@ -26,6 +26,16 @@ const unsigned EVENT_LOOP_FREQUENCY = 50;
 
 atomic<int> playback_state;
 
+double rms(AudioBuffer* buffer, size_t size)
+{
+  float acc = 0.0f;
+  for (size_t i = 0; i < size; i++) {
+    acc += (*buffer)[i] * (*buffer)[i];
+  }
+  acc = sqrt(acc/size);
+  return acc;
+}
+
 /**
  * @brief The main callback that will push audio samples to the system's audio backend.
  *
@@ -49,7 +59,7 @@ static int callback(const void * VAGG_UNUSED(inputBuffer),
   float* out = (float*)outputBuffer;
 
   size_t available = queue->available();
-  VAGG_LOG(VAGG_LOG_WARNING, "Available : %zu", available);
+  //VAGG_LOG(VAGG_LOG_WARNING, "Available : %zu", available);
 
   // We have no data ! Output silence.
   if (available == 0) {
@@ -68,6 +78,7 @@ static int callback(const void * VAGG_UNUSED(inputBuffer),
     }
   } else {
     AudioBuffer* buffer = queue->pop();
+    VAGG_LOG(VAGG_LOG_DEBUG, "%f", 10. * log10(rms(buffer, framesPerBuffer*2)));
     VAGG_ASSERT(buffer->size() == framesPerBuffer, "Bad buffer size.");
 
     size_t i = 0;
@@ -88,6 +99,7 @@ static int callback(const void * VAGG_UNUSED(inputBuffer),
   }
   return paContinue;
 }
+
 
 static void stream_finished( void* VAGG_UNUSED(user_data))
 {
@@ -169,7 +181,7 @@ int main(void)
       case HAS_DATA:
         break;
       case NEED_DATA:
-        VAGG_LOG(VAGG_LOG_OK, "Buffering");
+        //VAGG_LOG(VAGG_LOG_OK, "Buffering");
         for(int i = 0; i < 2; i++) {
           AudioBuffer* buffer = new AudioBuffer();
           buffer->reserve(CHUNK_SIZE);

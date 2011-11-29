@@ -51,7 +51,6 @@ size_t AudioFile::write_some(AudioBuffer& buffer)
     return -1;
   }
 
-  VAGG_LOG(VAGG_LOG_DEBUG, "Size : %zu, channels : %d, chunk_size: %zu", buffer.size(), infos_.channels, chunk_size_);
   VAGG_ASSERT(buffer.size() == chunk_size_ * infos_.channels, "Bad size for write_some");
   size_t count;
   count = sf_writef_float(file_, &buffer.front(), chunk_size_ * infos_.channels);

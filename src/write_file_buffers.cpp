@@ -2,6 +2,7 @@
 #include <sndfile.h>
 #include <string.h>
 #include <vector>
+#include <signal.h>
 #include "../vagg/vagg_macros.h"
 #include <portaudio.h>
 #include "RingBuffer.hpp"
@@ -24,6 +25,12 @@ const int RECORDING = 2;
 const int STOPPED = 3;
 
 std::atomic<int> recording_status;
+
+void handle_exit(int signal_number, siginfo_t* infos, void* context)
+{
+  VAGG_LOG(VAGG_LOG_OK, "End of recording requested.");
+  recording_status = SHOULD_STOP;
+}
 
 /**
  * @brief The main callback that will receive audio data and put them in a
@@ -77,6 +84,15 @@ int main(void)
 
   RingBuffer buffer(4096, 2);
 
+  struct sigaction action;
+  struct sigaction save;
+
+  // Prepare the SIGTINT signal handler. CTRL+C will gently close the program
+  sigemptyset(&action.sa_mask);
+  action.sa_sigaction = handle_exit;
+  action.sa_flags = SA_SIGINFO;
+  VAGG_SYSCALL(sigaction(SIGINT,&action,&save));
+
   err = Pa_Initialize();
   if(err != paNoError) {
     goto error;
@@ -116,6 +132,8 @@ int main(void)
   if(err != paNoError) {
     goto error;
   }
+
+  VAGG_LOG(VAGG_LOG_OK, "Recording. CTRL+C to stop.");
 
   while(record) {
     switch(recording_status) {
