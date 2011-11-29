@@ -78,4 +78,3 @@ $(OBJ)/RingBuffer.o: $(SRC)/RingBuffer.cpp
 $(OBJ)/ringbuffer_test.o: $(SRC)/RingBuffer.cpp $(SRC)/ringbuffer_test.cpp
 $(OBJ)/write_file_buffers.o: $(SRC)/write_file_buffers.cpp $(SRC)/AudioFile.cpp $(SRC)/RingBuffer.cpp 
 
-$(shell mkdir -p $(DIRS))
