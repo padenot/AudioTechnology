@@ -9,57 +9,71 @@
  */
 class AudioFile
 {
-	public:
-		enum Mode {
-			Write = SFM_WRITE,
-			Read = SFM_READ,
-			ReadWrite = SFM_RDWR
-		};
-		AudioFile(const char* filename,
-				size_t chunk_size = 4096,
-				int samplerate = 44100,
-				int channels = 2,
-				int format = SF_FORMAT_WAV|SF_FORMAT_PCM_16);
-		~AudioFile();
-		void open(Mode mode);
-		/**
-		 * @brief Read some data from the file.
-		 *
-		 * @param buffer The buffer in which we should take the data.
-		 *
-		 * @return  The number of samples retrieved from the file.
-		 */
-		size_t read_some(AudioBuffer& buffer);
+  public:
+    enum Mode {
+      Write = SFM_WRITE,
+      Read = SFM_READ,
+      ReadWrite = SFM_RDWR
+    };
+    AudioFile(const char* filename,
+        size_t chunk_size = 4096,
+        int samplerate = 44100,
+        int channels = 2,
+        int format = SF_FORMAT_WAV|SF_FORMAT_PCM_16);
+    ~AudioFile();
+    void open(Mode mode);
+    /**
+     * @brief Read some data from the file.
+     *
+     * @param buffer The buffer in which we should take the data.
+     *
+     * @return  The number of samples retrieved from the file.
+     */
+    size_t read_some(AudioBuffer& buffer);
     /**
      * @brief Write some data into a file.
      *
      * @param buffer The data to write in the file.
      */
     size_t write_some(AudioBuffer& buffer);
-	protected:
-		/**
-		 * @brief The file handle, for libsndfile.
-		 */
-		SNDFILE* file_;
-		/**
-		 * @brief The infos of the file, such as samplerate, samples format and
-		 * number of channels.
-		 */
-		SF_INFO infos_;
-		/**
-		 * @brief The filename.
-		 */
-		const char* filename_;
-		/**
-		 * @brief The size of the buffers used.
-		 */
-		const size_t chunk_size_;
 
-		/**
-		 * @brief The mode in which the file has been opened (read, write,
-		 * readwrite).
-		 */
-		Mode mode_;
+    /**
+     * @brief Get the number of channels
+     *
+     * @return 0 if no file loaded, the number of channels otherwise
+     */
+    int channels();
+
+    /**
+     * @brief Get the samplerate
+     *
+     * @return 0 if no file loaded, the samplerate otherwise
+     */
+    int samplerate();
+  protected:
+    /**
+     * @brief The file handle, for libsndfile.
+     */
+    SNDFILE* file_;
+    /**
+     * @brief The infos of the file, such as samplerate, samples format and
+     * number of channels.
+     */
+    SF_INFO infos_;
+    /**
+     * @brief The filename.
+     */
+    const char* filename_;
+    /**
+     * @brief The size of the buffers used.
+     */
+    const size_t chunk_size_;
+
+    /**
+     * @brief The mode in which the file has been opened (read, write,
+     * readwrite).
+     */
+    Mode mode_;
 };
 
 #endif

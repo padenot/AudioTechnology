@@ -109,9 +109,6 @@ static void stream_finished( void* VAGG_UNUSED(user_data))
 
 int main(void)
 {
-  AudioBuffer samples;
-  BufferList list;
-
   PaStreamParameters output_params;
   PaStream *stream;
   PaError err;

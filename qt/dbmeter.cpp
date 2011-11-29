@@ -16,7 +16,7 @@ void dBMeter::paintEvent(QPaintEvent *)
 	painter.fillRect(0, 0, 40, -val, Qt::green);
 }
 
-void dBMeter::newval(int value){
+void dBMeter::newval(int value) {
 	val = value;
 	this->update();
 }
