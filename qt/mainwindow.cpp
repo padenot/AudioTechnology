@@ -56,6 +56,10 @@ struct PlaybackStatus {
      setupMenus();
      setupUi();
      timeLcd->display("00:00");
+     
+     QTimer *timer = new QTimer(this);
+     //connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+     timer->start(50);
  }
 
  void MainWindow::addFiles()
@@ -77,43 +81,15 @@ struct PlaybackStatus {
 
  }
  
-
-void read_file(const char* filename, AudioBuffer& samples)
-{
-  SF_INFO infos_read;
-  infos_read.samplerate = SAMPLERATE;
-  infos_read.channels = CHANNELS;
-  infos_read.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-
-  VAGG_SYSCALL(sf_format_check(&infos_read));
-
-  SNDFILE *file = sf_open(filename, SFM_READ, &infos_read);
-  if (file == NULL) {
-    VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file));
-    abort();
-  }
-
-  size_t count = 0;
-  do {
-    SamplesType tmp[CHUNK_SIZE*CHANNELS];
-    count = sf_read_float(file, tmp, CHUNK_SIZE*CHANNELS);
-    samples.insert(samples.end(), tmp, tmp + count);
-  } while (count == CHUNK_SIZE*CHANNELS);
-
-  if (sf_close(file) != 0) {
-    VAGG_LOG(VAGG_LOG_OK, "Error while closing the file.");
-  }
-}
-
-
  
  void MainWindow::dtest(){
 	//QMessageBox::information(this, tr("Test Button!"),tr("You pressed it."));
    	timeLcd->display("23:42");
    	dbm->newval(qrand()%200);
+   	/*
    	AudioBuffer ab;
    	read_file("../assets/amen.wav",ab);
-   	
+   	*/
  }
 
 
@@ -243,6 +219,7 @@ void read_file(const char* filename, AudioBuffer& samples)
         // mediaObject->setCurrentSource(metaInformationResolver->currentSource());
      }
 
+	/*
      Phonon::MediaSource source = metaInformationResolver->currentSource();
      int index = sources.indexOf(metaInformationResolver->currentSource()) + 1;
      if (sources.size() > index) {
@@ -253,6 +230,7 @@ void read_file(const char* filename, AudioBuffer& samples)
          if (musicTable->columnWidth(0) > 300)
              musicTable->setColumnWidth(0, 300);
      }
+     */
  }
 
  void MainWindow::aboutToFinish()
@@ -327,6 +305,13 @@ void read_file(const char* filename, AudioBuffer& samples)
      seekSlider = new Phonon::SeekSlider(this);
      seekSlider->setMediaObject(mediaObject);
   */   
+	 seekSlider = new QSlider(Qt::Horizontal, this);
+	 seekSlider->setFocusPolicy(Qt::StrongFocus);
+     seekSlider->setTickPosition(QSlider::TicksBothSides);
+     seekSlider->setTickInterval(10);
+     seekSlider->setSingleStep(1);
+     seekSlider->setRange(0,100);
+  
      dbm = new dBMeter(this);
 //     connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(55)));
   //  connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(int)));
@@ -335,8 +320,20 @@ void read_file(const char* filename, AudioBuffer& samples)
      volumeSlider->setAudioOutput(audioOutput);
      volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 */
-//     QLabel *volumeLabel = new QLabel;
-//     volumeLabel->setPixmap(QPixmap("images/volume.png"));
+
+	 volumeSlider = new QSlider(Qt::Horizontal, this);
+	 volumeSlider->setFocusPolicy(Qt::StrongFocus);
+     volumeSlider->setTickPosition(QSlider::TicksBothSides);
+     volumeSlider->setTickInterval(10);
+     //volumeSlider->setSingleStep(1);
+ 	 volumeSlider->setRange(0,100);
+ 	 
+
+ 	 
+
+	 
+     QLabel *volumeLabel = new QLabel;
+     volumeLabel->setPixmap(QPixmap("images/volume.png"));
 
      QPalette palette;
      palette.setBrush(QPalette::Light, Qt::darkGray);
@@ -355,18 +352,21 @@ void read_file(const char* filename, AudioBuffer& samples)
      
      QHBoxLayout *dbmLayout = new QHBoxLayout;
      dbmLayout->addWidget(dbm);
+     
+         
+     connect(volumeSlider, SIGNAL(valueChanged(int)), dbm, SLOT(newval(int)));
              
 
      QHBoxLayout *seekerLayout = new QHBoxLayout;
-     //seekerLayout->addWidget(seekSlider);
+     seekerLayout->addWidget(seekSlider);
      seekerLayout->addWidget(timeLcd);
 
 	
      QHBoxLayout *playbackLayout = new QHBoxLayout;
      playbackLayout->addWidget(bar);
-     //playbackLayout->addStretch();
-    //playbackLayout->addWidget(volumeLabel);
-    // playbackLayout->addWidget(volumeSlider);
+     playbackLayout->addStretch();
+     playbackLayout->addWidget(volumeLabel);
+     playbackLayout->addWidget(volumeSlider);
     
      QHBoxLayout *mid = new QHBoxLayout;
      mid->addWidget(musicTable);
@@ -384,4 +384,6 @@ void read_file(const char* filename, AudioBuffer& samples)
 
      setCentralWidget(widget);
      setWindowTitle("player wtf");
+     
+     
  }
