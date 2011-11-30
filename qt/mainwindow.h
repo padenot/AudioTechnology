@@ -7,7 +7,7 @@
  #include <phonon/mediaobject.h>
  #include <phonon/volumeslider.h>
  #include <phonon/backendcapabilities.h>
- #include <QList>
+// #include <QList>
  #include <QSlider>
  #include "dbmeter.h"
 
