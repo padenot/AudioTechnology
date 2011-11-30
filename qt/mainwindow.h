@@ -8,6 +8,7 @@
  #include <phonon/volumeslider.h>
  #include <phonon/backendcapabilities.h>
  #include <QList>
+ #include <QSlider>
  #include "dbmeter.h"
 
  class QAction;
@@ -44,11 +45,12 @@
 
      dBMeter *dbm;
 
-     Phonon::SeekSlider *seekSlider;
+     QSlider *seekSlider;
      Phonon::MediaObject *mediaObject;
      Phonon::MediaObject *metaInformationResolver;
      Phonon::AudioOutput *audioOutput;
-     Phonon::VolumeSlider *volumeSlider;
+     
+     QSlider *volumeSlider;
      QList<Phonon::MediaSource> sources;
 
      QAction *playAction;

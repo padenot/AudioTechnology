@@ -111,9 +111,10 @@ void read_file(const char* filename, AudioBuffer& samples)
 	//QMessageBox::information(this, tr("Test Button!"),tr("You pressed it."));
    	timeLcd->display("23:42");
    	dbm->newval(qrand()%200);
+   	/*
    	AudioBuffer ab;
    	read_file("../assets/amen.wav",ab);
-   	
+   	*/
  }
 
 
@@ -243,6 +244,7 @@ void read_file(const char* filename, AudioBuffer& samples)
         // mediaObject->setCurrentSource(metaInformationResolver->currentSource());
      }
 
+	/*
      Phonon::MediaSource source = metaInformationResolver->currentSource();
      int index = sources.indexOf(metaInformationResolver->currentSource()) + 1;
      if (sources.size() > index) {
@@ -253,6 +255,7 @@ void read_file(const char* filename, AudioBuffer& samples)
          if (musicTable->columnWidth(0) > 300)
              musicTable->setColumnWidth(0, 300);
      }
+     */
  }
 
  void MainWindow::aboutToFinish()
@@ -327,6 +330,13 @@ void read_file(const char* filename, AudioBuffer& samples)
      seekSlider = new Phonon::SeekSlider(this);
      seekSlider->setMediaObject(mediaObject);
   */   
+	 seekSlider = new QSlider(Qt::Horizontal, this);
+	 seekSlider->setFocusPolicy(Qt::StrongFocus);
+     seekSlider->setTickPosition(QSlider::TicksBothSides);
+     seekSlider->setTickInterval(10);
+     seekSlider->setSingleStep(1);
+     seekSlider->setRange(0,100);
+  
      dbm = new dBMeter(this);
 //     connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(55)));
   //  connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(int)));
@@ -335,8 +345,20 @@ void read_file(const char* filename, AudioBuffer& samples)
      volumeSlider->setAudioOutput(audioOutput);
      volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 */
-//     QLabel *volumeLabel = new QLabel;
-//     volumeLabel->setPixmap(QPixmap("images/volume.png"));
+
+	 volumeSlider = new QSlider(Qt::Horizontal, this);
+	 volumeSlider->setFocusPolicy(Qt::StrongFocus);
+     volumeSlider->setTickPosition(QSlider::TicksBothSides);
+     volumeSlider->setTickInterval(10);
+     //volumeSlider->setSingleStep(1);
+ 	 volumeSlider->setRange(0,100);
+ 	 
+
+ 	 
+
+	 
+     QLabel *volumeLabel = new QLabel;
+     volumeLabel->setPixmap(QPixmap("images/volume.png"));
 
      QPalette palette;
      palette.setBrush(QPalette::Light, Qt::darkGray);
@@ -355,18 +377,21 @@ void read_file(const char* filename, AudioBuffer& samples)
      
      QHBoxLayout *dbmLayout = new QHBoxLayout;
      dbmLayout->addWidget(dbm);
+     
+         
+     connect(volumeSlider, SIGNAL(valueChanged(int)), dbm, SLOT(newval(int)));
              
 
      QHBoxLayout *seekerLayout = new QHBoxLayout;
-     //seekerLayout->addWidget(seekSlider);
+     seekerLayout->addWidget(seekSlider);
      seekerLayout->addWidget(timeLcd);
 
 	
      QHBoxLayout *playbackLayout = new QHBoxLayout;
      playbackLayout->addWidget(bar);
-     //playbackLayout->addStretch();
-    //playbackLayout->addWidget(volumeLabel);
-    // playbackLayout->addWidget(volumeSlider);
+     playbackLayout->addStretch();
+     playbackLayout->addWidget(volumeLabel);
+     playbackLayout->addWidget(volumeSlider);
     
      QHBoxLayout *mid = new QHBoxLayout;
      mid->addWidget(musicTable);
