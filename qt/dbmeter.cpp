@@ -18,7 +18,7 @@ void dBMeter::paintEvent(QPaintEvent *)
 	//	qDebug() << val;
 }
 
-void dBMeter::newval(int value){
+void dBMeter::newval(int value) {
 	val = value;
 	this->update();
 }

@@ -17,43 +17,51 @@ AudioBuffersQueue::AudioBuffersQueue(size_t chunk_size)
 
 size_t AudioBuffersQueue::available()
 {
-	SYNC();
-	if (buffers_.empty()) {
-		return 0;
-	}
-	return buffers_.size() * (chunks_size_ - 1) + buffers_.back()->size();
+  SYNC();
+  if (buffers_.empty()) {
+    return 0;
+  }
+  return (buffers_.size() - 1) * (chunks_size_) + buffers_.back()->size();
 }
 
 void AudioBuffersQueue::push(AudioBuffer* buffer)
 {
-	SYNC();
-	buffers_.push_back(buffer);
-	clean();
+  SYNC();
+  buffers_.push_back(buffer);
+  clean();
+  SYNC();
 }
 
 AudioBuffer* AudioBuffersQueue::pop()
 {
-	SYNC();
-	AudioBuffer* b = buffers_.front();
-	buffers_.pop_front();
-	return b;
+  SYNC();
+  AudioBuffer* b = buffers_.front();
+  buffers_.pop_front();
+  SYNC();
+  return b;
 }
 
 void AudioBuffersQueue::dispose(AudioBuffer* buffer)
 {
-	dirty_buffers_.push_back(buffer);
+  SYNC();
+  dirty_buffers_.push_back(buffer);
+  SYNC();
 }
 
 void AudioBuffersQueue::close()
 {
-	clean();
+  SYNC();
+  clean();
+  SYNC();
 }
 
 void AudioBuffersQueue::clean()
 {
-	while(! dirty_buffers_.empty()) {
-		AudioBuffer* b = dirty_buffers_.front();
-		dirty_buffers_.pop_front();
-		delete b;
-	}
+  SYNC();
+  while(! dirty_buffers_.empty()) {
+    AudioBuffer* b = dirty_buffers_.front();
+    dirty_buffers_.pop_front();
+    delete b;
+  }
+  SYNC();
 }
