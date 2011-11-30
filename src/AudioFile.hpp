@@ -16,9 +16,8 @@ class AudioFile
       ReadWrite = SFM_RDWR
     };
     AudioFile(const char* filename,
-        size_t chunk_size = 4096,
-        int samplerate = 44100,
         int channels = 2,
+        int samplerate = 44100,
         int format = SF_FORMAT_WAV|SF_FORMAT_PCM_16);
     ~AudioFile();
     void open(Mode mode);
@@ -29,13 +28,13 @@ class AudioFile
      *
      * @return  The number of samples retrieved from the file.
      */
-    size_t read_some(AudioBuffer& buffer);
+    size_t read_some(AudioBuffer buffer, size_t size);
     /**
      * @brief Write some data into a file.
      *
      * @param buffer The data to write in the file.
      */
-    size_t write_some(AudioBuffer& buffer);
+    size_t write_some(AudioBuffer buffer, size_t size);
 
     /**
      * @brief Get the number of channels
@@ -64,10 +63,6 @@ class AudioFile
      * @brief The filename.
      */
     const char* filename_;
-    /**
-     * @brief The size of the buffers used.
-     */
-    const size_t chunk_size_;
 
     /**
      * @brief The mode in which the file has been opened (read, write,

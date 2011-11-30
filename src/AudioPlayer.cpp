@@ -1,6 +1,7 @@
 #include "AudioPlayer.hpp"
 #include "vagg/vagg.h"
 
+
 #define HANDLE_PA_ERROR(err)                                                            \
   Pa_Terminate();                                                                       \
   VAGG_LOG(VAGG_LOG_CRITICAL, "An error occured while using the portaudio stream, line %d", __LINE__ );  \
@@ -11,15 +12,13 @@
 AudioPlayer::AudioPlayer(const size_t chunk_size, const unsigned event_loop_frequency)
   :event_loop_frequency_(event_loop_frequency)
   ,chunk_size_(chunk_size)
+  ,ring_buffer_(chunk_size * 2)
   ,playback_state_(STOPPED)
-{
-  queue_ = new AudioBuffersQueue(chunk_size_);
-}
+{ }
 
 AudioPlayer::~AudioPlayer()
 {
-  queue_->close();
-  delete queue_;
+  unload();
 }
 
 int AudioPlayer::play()
@@ -37,36 +36,35 @@ int AudioPlayer::play()
     HANDLE_PA_ERROR(err);
   }
 
-  bool audio_playing = true;
-  // Event loop
-  while(audio_playing) {
-    switch(playback_state_) {
-      case HAS_DATA:
-        break;
-      case NEED_DATA:
-        //VAGG_LOG(VAGG_LOG_OK, "Buffering");
-        for(int i = 0; i < 2; i++) {
-          AudioBuffer* buffer = new AudioBuffer();
-          buffer->reserve(chunk_size_);
-          if (file_->read_some(*buffer) != chunk_size_ * file_->channels()) {
-            playback_state_ = SHOULD_STOP;
-            break;
-          }
-          queue_->push(buffer);
-        }
-        break;
-      case SHOULD_STOP:
-        VAGG_LOG(VAGG_LOG_OK, "Draining audio.");
-        break;
-      case STOPPED:
-        VAGG_LOG(VAGG_LOG_OK, "Stopping audio.");
-        audio_playing = false;
-        break;
-    }
-    Pa_Sleep(event_loop_frequency_);
-  }
-  VAGG_LOG(VAGG_LOG_OK, "Finished with playing");
   return 0;
+}
+
+bool AudioPlayer::state_machine()
+{
+  switch(playback_state_) {
+    case HAS_DATA:
+      break;
+    case NEED_DATA:
+      {
+        while(! ring_buffer_.full()) {
+          size_t size = chunk_size_ * file_->channels();
+          SamplesType b[size];
+          if (file_->read_some(b, size) != size) {
+            playback_state_ = SHOULD_STOP;
+          }
+          ring_buffer_.push(b, size);
+        }
+      }
+      break;
+    case SHOULD_STOP:
+      VAGG_LOG(VAGG_LOG_OK, "Draining audio.");
+      break;
+    case STOPPED:
+      VAGG_LOG(VAGG_LOG_OK, "Stopping audio.");
+      return false;
+      break;
+  }
+  return true;
 }
 
 void AudioPlayer::finished_callback( void* user_data)
@@ -128,7 +126,7 @@ int AudioPlayer::load(const char* file)
                       NULL,
                       &output_params_,
                       file_->samplerate(),
-                      chunk_size_ * file_->channels(),
+                      chunk_size_,
                       paClipOff,
                       &AudioPlayer::audio_callback,
                       this);
@@ -144,16 +142,14 @@ int AudioPlayer::load(const char* file)
 
   // Prebuffering
   {
-    size_t c = 4;
-    while(c--) {
-      VAGG_LOG(VAGG_LOG_OK, "prebuffer %d", c);
-      AudioBuffer* prebuffer = new AudioBuffer();
-      prebuffer->reserve(chunk_size_ * file_->channels());
-      size_t count = file_->read_some(*prebuffer);
-      if (count != chunk_size_ * file_->channels()) {
-        prebuffer->resize(count);
+    while(! ring_buffer_.full()) {
+      size_t size = chunk_size_ * file_->channels();
+      SamplesType prebuffer[size];
+      size_t count = file_->read_some(prebuffer, size);
+      ring_buffer_.push(prebuffer, size);
+      if (count != size) {
+        break;
       }
-      queue_->push(prebuffer);
     }
   }
   return 0;
@@ -162,8 +158,6 @@ int AudioPlayer::load(const char* file)
 int AudioPlayer::unload()
 {
   PaError err;
-
-  queue_->close();
 
   if (playback_state_ != STOPPED && stream_) {
     err = Pa_StopStream( stream_ );
@@ -176,6 +170,7 @@ int AudioPlayer::unload()
     if(err != paNoError) {
       HANDLE_PA_ERROR(err);
     }
+    stream_ = 0;
   }
 
   Pa_Terminate();
@@ -212,19 +207,12 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
                                 unsigned long framesPerBuffer,
                                 const PaStreamCallbackTimeInfo* VAGG_UNUSED(timeInfo),
                                 PaStreamCallbackFlags VAGG_UNUSED(statusFlags),
-                                void *userData)
+                                void *VAGG_UNUSED(userData))
 {
   float* out = (float*)outputBuffer;
 
-  size_t available = queue_->available();
-  //VAGG_LOG(VAGG_LOG_WARNING, "Available : %zu", available);
-
   // We have no data ! Output silence.
-  if (available == 0) {
-    VAGG_LOG(VAGG_LOG_DEBUG, "No data available");
-    if ( playback_state_ == SHOULD_STOP) {
-      return paComplete;
-    } else {
+  if (ring_buffer_.empty()) {
     VAGG_LOG(VAGG_LOG_WARNING, "UNDERRUN");
     playback_state_ = NEED_DATA;
     for(size_t i = 0; i < framesPerBuffer; i++) {
@@ -233,28 +221,29 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
       // Right
       *out++ = 0.0;
     }
-    return paContinue;
-    }
   } else {
-    AudioBuffer* buffer = queue_->pop();
+    SamplesType buffer[framesPerBuffer * file_->channels()];
+    ring_buffer_.pop(buffer, framesPerBuffer * file_->channels());
     // XXX RMS
-    //VAGG_LOG(VAGG_LOG_DEBUG, "%f", 10. * log10(rms(buffer, framesPerBuffer*2)));
-    VAGG_ASSERT(buffer->size() == framesPerBuffer, "Bad buffer size.");
+    //VAGG_LOG(VAGG_LOG_DEBUG, "%f", 10. * log10(rms(buffer, framesPerBuffer*2))); 
 
     size_t i = 0;
-    while( i < framesPerBuffer * 2 ) {
-      *out++ = (*buffer)[i++];
-      *out++ = (*buffer)[i++];
+    while( i < framesPerBuffer * 2) {
+      *out++ = buffer[i++];
+      *out++ = buffer[i++];
     }
-    queue_->dispose(buffer);
 
-    // Tell the other thread that it should start buffering.
     if (playback_state_ == SHOULD_STOP) {
-      return paContinue;
-    } else if (available < framesPerBuffer * 4) {
-      playback_state_ = NEED_DATA;
+      if (ring_buffer_.available_read() == 0) {
+        return paComplete;
+      }
     } else {
-      playback_state_ = HAS_DATA;
+      // Tell the other thread that it should start buffering.
+      if (ring_buffer_.available_read() < 3) {
+        playback_state_ = NEED_DATA;
+      } else {
+        playback_state_ = HAS_DATA;
+      }
     }
   }
   return paContinue;

@@ -1,8 +1,8 @@
 #ifndef AUDIOPLAYER_HPP
 #define AUDIOPLAYER_HPP
 
-#include "AudioBuffersQueue.hpp"
 #include "AudioFile.hpp"
+#include "RingBuffer.hpp"
 
 #include <atomic>
 #include <portaudio.h>
@@ -22,6 +22,7 @@ class AudioPlayer
     int load(const char* file);
     int unload();
     int seek(const double ms);
+    bool state_machine();
   protected:
     /** Callbacks **/
     static int audio_callback(const void * inputBuffer,
@@ -43,9 +44,9 @@ class AudioPlayer
 
     /** Members **/
     AudioFile* file_;
-    AudioBuffersQueue* queue_;
     const unsigned event_loop_frequency_;
     const size_t chunk_size_;
+    RingBuffer<SamplesType,4> ring_buffer_;
     std::atomic<int> playback_state_;
 
     PaStreamParameters output_params_;
