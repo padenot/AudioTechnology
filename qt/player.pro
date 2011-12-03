@@ -1,13 +1,18 @@
-QT        += phonon
-
 HEADERS   += mainwindow.h \
-             dbmeter.h
+             dbmeter.h \
+             ../src/AudioFile.hpp \
+             ../src/AudioPlayer.hpp
+
 SOURCES   += main.cpp \
              dbmeter.cpp \
-             mainwindow.cpp
+             mainwindow.cpp \
+             ../src/AudioFile.cpp \
+             ../src/AudioPlayer.cpp
 
-LIBS      += -lvagg -L../vagg -lsndfile
-INCLUDEPATH += ../
+CONFIG += debug
+QMAKE_CXXFLAGS += -std=c++0x -DVAGG_DEBUG
+LIBS      += -lvagg -L../vagg -lsndfile -lrt -lasound -lpthread -lportaudio -Wl,-rpath -Wl,/usr/local/lib/ -Wl,-rpath -Wl,../vagg -L/usr/local/lib -I. -Lvagg -lvagg  -lm
+INCLUDEPATH += ../ ../src
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/phonon/qmusicplayer

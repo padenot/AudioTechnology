@@ -1,10 +1,8 @@
 #include "AudioFile.hpp"
 
-AudioFile::AudioFile(const char* filename, int channels, int samplerate, int format)
+AudioFile::AudioFile(const char* filename, int format)
 :filename_(filename)
 {
-  infos_.samplerate = samplerate;
-  infos_.channels = channels;
   infos_.format = format;
   VAGG_SYSCALL(sf_format_check(&infos_));
 }
@@ -18,15 +16,29 @@ AudioFile::~AudioFile()
   }
 }
 
-void AudioFile::open(const AudioFile::Mode mode) 
+int AudioFile::open(const AudioFile::Mode mode)
 {
   file_ = sf_open(filename_, mode, &infos_);
   if (file_ == NULL) {
     VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
-    abort();
+    return -1;
   } else {
     VAGG_LOG(VAGG_LOG_OK, "File %s opened", filename_);
+    get_duration();
+    return 0;
   }
+}
+
+int AudioFile::seek(double ms)
+{
+  if (infos_.seekable) {
+    sf_count_t offset = ms * infos_.samplerate * infos_.channels;
+    sf_count_t count = sf_seek(file_, offset, SEEK_SET);
+    if (count == -1) {
+      VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
+    }
+  }
+  return 0;
 }
 
 size_t AudioFile::read_some(AudioBuffer buffer, size_t size)
@@ -38,7 +50,7 @@ size_t AudioFile::read_some(AudioBuffer buffer, size_t size)
   size_t count;
   count = sf_read_float(file_, buffer, size);
   if (count != size) {
-    VAGG_LOG(VAGG_LOG_WARNING, "Bar read, asked=%zu, written=%zu", size, count);
+    VAGG_LOG(VAGG_LOG_WARNING, "End of file, asked=%zu, written=%zu", size, count);
   }
   return count;
 }
@@ -66,4 +78,29 @@ int AudioFile::channels()
 int AudioFile::samplerate()
 {
   return file_ ? infos_.samplerate : 0;
+}
+
+double AudioFile::duration()
+{
+  return duration_;
+}
+
+void AudioFile::get_duration() {
+  if (infos_.seekable) {
+    sf_count_t count = sf_seek(file_, 0, SEEK_SET);
+    if (count == -1) {
+      VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
+    }
+
+    count = sf_seek(file_, 0, SEEK_END);
+    if (count == -1) {
+      VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
+    }
+    duration_ = (double)count / infos_.samplerate;
+    VAGG_LOG(VAGG_LOG_DEBUG, "Duration for %s is %lf", filename_, duration_);
+  } else {
+    duration_ = -1.0f;
+  }
+
+  sf_count_t count = sf_seek(file_, 0, SEEK_SET);
 }

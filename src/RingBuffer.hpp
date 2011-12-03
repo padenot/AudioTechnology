@@ -32,13 +32,13 @@ class RingBuffer {
 
     bool full() const
     {
-      return ((tail_ + 1) % Capacity == head_);
+      return ((tail_ + 1) % Slots == head_);
     }
 
     bool push(SamplesType* data, size_t length)
     {
       if (length != slots_size_) {
-        VAGG_LOG(VAGG_LOG_FATAL, "Bad push size");
+        VAGG_LOG(VAGG_LOG_FATAL, "Bad push size asked : %zu, slot size : %zu", length, slots_size_);
         return false;
       }
       size_t next = increment(tail_);
@@ -67,28 +67,33 @@ class RingBuffer {
       return true;
     }
 
-    enum {
-      Capacity = Slots
-    };
+    void clear()
+    {
+      for (size_t i = 0; i < Slots; i++) {
+        for (size_t j = 0; j < slots_size_; j++) {
+          data_[i][j] = 0;
+        }
+      }
+    }
 
     size_t available_read()
     {
       if (head_ <= tail_) {
         return tail_ - head_;
       }
-      return Capacity - (head_ - tail_);
+      return Slots - (head_ - tail_);
     }
 
   protected:
     size_t increment(size_t index)
     {
-      return (index + 1) % Capacity;
+      return (index + 1) % Slots;
     }
 
     volatile size_t head_;
     volatile size_t tail_;
     const size_t slots_size_;
-    T* data_[Capacity];
+    T* data_[Slots];
 };
 
 #endif

@@ -2,6 +2,7 @@
  #define MAINWINDOW_H
 
  #include <QMainWindow>
+ #include <QTimer>
  #include <phonon/audiooutput.h>
  #include <phonon/seekslider.h>
  #include <phonon/mediaobject.h>
@@ -11,8 +12,9 @@
  #include <QSlider>
  #include "dbmeter.h"
 
+#include "AudioPlayer.hpp"
+
  class QAction;
- class QTableWidget;
  class QLCDNumber;
 
 
@@ -28,34 +30,31 @@
      }
 
  private slots:
-     void addFiles();
+     void openfile();
      void about();
-     void stateChanged(Phonon::State newState, Phonon::State oldState);
      void tick(qint64 time);
-     void sourceChanged(const Phonon::MediaSource &source);
-     void metaStateChanged(Phonon::State newState, Phonon::State oldState);
-     void aboutToFinish();
-     void tableClicked(int row, int column);
      void dtest();
+     void playpause();
+     void stop();
+     void event_loop();
+     void seek(int where);
 
  private:
+     void pause();
+     void play();
      void setupActions();
      void setupMenus();
      void setupUi();
+     void unload();
+     void stopped();
 
      dBMeter *dbm;
 
      QSlider *seekSlider;
-     Phonon::MediaObject *mediaObject;
-     Phonon::MediaObject *metaInformationResolver;
-     Phonon::AudioOutput *audioOutput;
-     
      QSlider *volumeSlider;
-     QList<Phonon::MediaSource> sources;
 
      QAction *playAction;
-     QAction *testAction;
-     QAction *pauseAction;
+     QAction *openAction;
      QAction *stopAction;
      QAction *nextAction;
      QAction *previousAction;
@@ -64,7 +63,10 @@
      QAction *aboutAction;
      QAction *aboutQtAction;
      QLCDNumber *timeLcd;
-     QTableWidget *musicTable;
+     QString filepath;
+     AudioPlayer* player;
+     QTimer event_loop_timer;
+     bool playing;
  };
 
  #endif

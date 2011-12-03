@@ -16,11 +16,9 @@ class AudioFile
       ReadWrite = SFM_RDWR
     };
     AudioFile(const char* filename,
-        int channels = 2,
-        int samplerate = 44100,
         int format = SF_FORMAT_WAV|SF_FORMAT_PCM_16);
     ~AudioFile();
-    void open(Mode mode);
+    int open(Mode mode);
     /**
      * @brief Read some data from the file.
      *
@@ -36,6 +34,8 @@ class AudioFile
      */
     size_t write_some(AudioBuffer buffer, size_t size);
 
+    int seek(double ms);
+
     /**
      * @brief Get the number of channels
      *
@@ -49,7 +49,10 @@ class AudioFile
      * @return 0 if no file loaded, the samplerate otherwise
      */
     int samplerate();
+
+    double duration();
   protected:
+    void get_duration();
     /**
      * @brief The file handle, for libsndfile.
      */
@@ -69,6 +72,8 @@ class AudioFile
      * readwrite).
      */
     Mode mode_;
+
+    double duration_;
 };
 
 #endif

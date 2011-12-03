@@ -3,6 +3,7 @@
 
 #include "AudioFile.hpp"
 #include "RingBuffer.hpp"
+#include "Effect.hpp"
 
 #include <atomic>
 #include <portaudio.h>
@@ -15,15 +16,18 @@
 class AudioPlayer
 {
   public:
-    AudioPlayer(const size_t chunk_size, const unsigned event_loop_frequency);
+    AudioPlayer(const size_t chunk_size);
     ~AudioPlayer();
     int play();
     int pause();
     int load(const char* file);
     int unload();
     int seek(const double ms);
+    int insert(Effect* effect);
     bool state_machine();
+    double duration();
   protected:
+    void prebuffer();
     /** Callbacks **/
     static int audio_callback(const void * inputBuffer,
                         void *outputBuffer,
@@ -44,13 +48,14 @@ class AudioPlayer
 
     /** Members **/
     AudioFile* file_;
-    const unsigned event_loop_frequency_;
     const size_t chunk_size_;
-    RingBuffer<SamplesType,4> ring_buffer_;
+    RingBuffer<SamplesType,4>* ring_buffer_;
     std::atomic<int> playback_state_;
 
     PaStreamParameters output_params_;
     PaStream *stream_;
+
+    Effect* effect_;
 };
 
 #endif

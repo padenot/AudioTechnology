@@ -9,11 +9,10 @@
   VAGG_LOG(VAGG_LOG_CRITICAL, "Error message: %s", Pa_GetErrorText(err));             \
   return err;
 
-AudioPlayer::AudioPlayer(const size_t chunk_size, const unsigned event_loop_frequency)
-  :event_loop_frequency_(event_loop_frequency)
-  ,chunk_size_(chunk_size)
-  ,ring_buffer_(chunk_size * 2)
+AudioPlayer::AudioPlayer(const size_t chunk_size)
+  :chunk_size_(chunk_size)
   ,playback_state_(STOPPED)
+  ,effect_(0)
 { }
 
 AudioPlayer::~AudioPlayer()
@@ -43,23 +42,27 @@ bool AudioPlayer::state_machine()
 {
   switch(playback_state_) {
     case HAS_DATA:
+      printf("Has Data\n");
       break;
     case NEED_DATA:
       {
-        while(! ring_buffer_.full()) {
+        printf("Need Data\n");
+        while(! ring_buffer_->full()) {
           size_t size = chunk_size_ * file_->channels();
           SamplesType b[size];
           if (file_->read_some(b, size) != size) {
             playback_state_ = SHOULD_STOP;
           }
-          ring_buffer_.push(b, size);
+          ring_buffer_->push(b, size);
         }
       }
       break;
     case SHOULD_STOP:
+      printf("should stop Data\n");
       VAGG_LOG(VAGG_LOG_OK, "Draining audio.");
       break;
     case STOPPED:
+      printf("stopped\n");
       VAGG_LOG(VAGG_LOG_OK, "Stopping audio.");
       return false;
       break;
@@ -85,26 +88,57 @@ int AudioPlayer::pause()
     VAGG_LOG(VAGG_LOG_WARNING, "Cannot pause, no file loaded");
     return -1;
   }
-  VAGG_LOG(VAGG_LOG_WARNING, "Not implemented.");
-  return -1;
+  PaError err = Pa_StopStream( stream_ );
+  if(err != paNoError) {
+    HANDLE_PA_ERROR(err);
+  }
+  return 0;
 }
 
-int AudioPlayer::seek(const double VAGG_UNUSED(ms))
+int AudioPlayer::seek(const double ms)
 {
   if (! file_) {
-    VAGG_LOG(VAGG_LOG_WARNING, "Cannot pause, no file loaded");
+    VAGG_LOG(VAGG_LOG_WARNING, "Cannot seek, no file loaded");
     return -1;
   }
-  VAGG_LOG(VAGG_LOG_WARNING, "Not implemented.");
-  return -1;
+
+  VAGG_LOG(VAGG_LOG_DEBUG, "Seeking to %lf", ms);
+
+  file_->seek(ms);
+  ring_buffer_->clear();
+  if (playback_state_ != STOPPED) {
+    prebuffer();
+  }
+
+  return 0;
+}
+
+int AudioPlayer::insert(Effect* effect)
+{
+  effect_ = effect;
+  return 0;
+}
+
+double AudioPlayer::duration()
+{
+  if (file_) {
+    return file_->duration();
+  }
+  return 0;
 }
 
 int AudioPlayer::load(const char* file)
 {
+  VAGG_LOG(VAGG_LOG_DEBUG, "Loading %s.", file);
   PaError err;
 
   file_ = new AudioFile(file);
-  file_->open(AudioFile::Read);
+  if ((err = file_->open(AudioFile::Read))) {
+    HANDLE_PA_ERROR(err);
+    return err;
+  }
+
+  ring_buffer_ = new RingBuffer<SamplesType, 4>(chunk_size_ * file_->channels());
 
   err = Pa_Initialize();
   if(err != paNoError) {
@@ -140,19 +174,22 @@ int AudioPlayer::load(const char* file)
     HANDLE_PA_ERROR(err);
   }
 
-  // Prebuffering
-  {
-    while(! ring_buffer_.full()) {
-      size_t size = chunk_size_ * file_->channels();
-      SamplesType prebuffer[size];
-      size_t count = file_->read_some(prebuffer, size);
-      ring_buffer_.push(prebuffer, size);
-      if (count != size) {
-        break;
-      }
+  prebuffer();
+
+  return 0;
+}
+
+void AudioPlayer::prebuffer()
+{
+  while(! ring_buffer_->full()) {
+    size_t size = chunk_size_ * file_->channels();
+    SamplesType prebuffer[size];
+    size_t count = file_->read_some(prebuffer, size);
+    ring_buffer_->push(prebuffer, size);
+    if (count != size) {
+      break;
     }
   }
-  return 0;
 }
 
 int AudioPlayer::unload()
@@ -174,6 +211,9 @@ int AudioPlayer::unload()
   }
 
   Pa_Terminate();
+
+  delete ring_buffer_;
+
   return 0;
 }
 
@@ -212,7 +252,7 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
   float* out = (float*)outputBuffer;
 
   // We have no data ! Output silence.
-  if (ring_buffer_.empty()) {
+  if (ring_buffer_->empty()) {
     VAGG_LOG(VAGG_LOG_WARNING, "UNDERRUN");
     playback_state_ = NEED_DATA;
     for(size_t i = 0; i < framesPerBuffer; i++) {
@@ -222,24 +262,29 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
       *out++ = 0.0;
     }
   } else {
-    SamplesType buffer[framesPerBuffer * file_->channels()];
-    ring_buffer_.pop(buffer, framesPerBuffer * file_->channels());
+    size_t channels = file_->channels();
+    SamplesType buffer[framesPerBuffer * channels];
+    ring_buffer_->pop(buffer, framesPerBuffer * channels);
     // XXX RMS
-    //VAGG_LOG(VAGG_LOG_DEBUG, "%f", 10. * log10(rms(buffer, framesPerBuffer*2))); 
 
     size_t i = 0;
-    while( i < framesPerBuffer * 2) {
-      *out++ = buffer[i++];
-      *out++ = buffer[i++];
+    while( i < framesPerBuffer * channels) {
+      for (size_t c = 0; c < channels; c++) {
+        *out++ = buffer[i++];
+      }
+    }
+
+    if (effect_) {
+      effect_->process(buffer, framesPerBuffer, file_->channels());
     }
 
     if (playback_state_ == SHOULD_STOP) {
-      if (ring_buffer_.available_read() == 0) {
+      if (ring_buffer_->available_read() == 0) {
         return paComplete;
       }
     } else {
       // Tell the other thread that it should start buffering.
-      if (ring_buffer_.available_read() < 3) {
+      if (ring_buffer_->available_read() < 3) {
         playback_state_ = NEED_DATA;
       } else {
         playback_state_ = HAS_DATA;
