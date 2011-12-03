@@ -1,7 +1,8 @@
 HEADERS   += mainwindow.h \
              dbmeter.h \
              ../src/AudioFile.hpp \
-             ../src/AudioPlayer.hpp
+             ../src/AudioPlayer.hpp \
+             ../src/RingBuffer.hpp
 
 SOURCES   += main.cpp \
              dbmeter.cpp \
@@ -12,7 +13,8 @@ SOURCES   += main.cpp \
 CONFIG += debug
 QMAKE_CXXFLAGS += -std=c++0x -DVAGG_DEBUG
 LIBS      += -lvagg -L../vagg -lsndfile -lrt -lasound -lpthread -lportaudio -Wl,-rpath -Wl,/usr/local/lib/ -Wl,-rpath -Wl,../vagg -L/usr/local/lib -I. -Lvagg -lvagg  -lm
-INCLUDEPATH += ../ ../src
+INCLUDEPATH += ../
+INCLUDEPATH += ../src
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/phonon/qmusicplayer

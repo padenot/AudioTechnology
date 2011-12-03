@@ -3,12 +3,13 @@
 
 #include "types.hpp"
 #include <math.h>
+#include "Effect.hpp"
 
 class RMS : public Effect
 {
   public:
-    RMS(void (*callback)(float*, size_t))
-      :callback_(callback)
+    RMS(void (*callback)(float*, size_t, void*), void* userdata)
+      :callback_(callback),userdata_(userdata)
     { }
 
     // |length * channels| is the size of |samples|.
@@ -21,11 +22,12 @@ class RMS : public Effect
         }
         acc[c] = sqrt(acc[c] / length);
       }
-      callback_(acc, channels);
+      callback_(acc, channels, userdata_);
     }
 
   protected:
-   void (*callback_)(float*, size_t);
+   void (*callback_)(float*, size_t, void*);
+   void* userdata_;
 };
 
 #endif

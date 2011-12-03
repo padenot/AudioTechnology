@@ -47,6 +47,8 @@
      void setupUi();
      void unload();
      void stopped();
+     static void rmscallback(float* values, size_t size, void* userdata);
+     void rmscallback_m(float* values, size_t size, void* userdata);
 
      dBMeter *dbm;
 
@@ -55,7 +57,6 @@
 
      QAction *playAction;
      QAction *openAction;
-     QAction *stopAction;
      QAction *nextAction;
      QAction *previousAction;
      QAction *addFilesAction;
@@ -67,6 +68,7 @@
      AudioPlayer* player;
      QTimer event_loop_timer;
      bool playing;
+     bool current_time_advance_;
  };
 
  #endif

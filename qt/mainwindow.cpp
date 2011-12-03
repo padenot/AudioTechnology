@@ -7,7 +7,28 @@
 #include "vagg/vagg_macros.h"
 #include <portaudio.h>
 
+#include "RMS.hpp"
 #include "mainwindow.h"
+
+static float rms2db(float value)
+{
+  return 10 * log10(value);
+}
+
+void MainWindow::rmscallback(float* values, size_t size, void* user_data)
+{
+  MainWindow* mw = static_cast<MainWindow*>(user_data);
+  for (size_t i = 0; i < size; i++) {
+    VAGG_LOG(VAGG_LOG_DEBUG, "%f ", values[i]);
+    values[i] = rms2db(values[i]);
+  }
+  mw->rmscallback_m(values, size, user_data);
+}
+
+void MainWindow::rmscallback_m(float* values, size_t size, void* user_data)
+{
+  dbm->valueChanged(values, size);
+}
 
 MainWindow::MainWindow()
   :player(0)
@@ -24,13 +45,13 @@ MainWindow::MainWindow()
 
 void MainWindow::openfile()
 {
-  unload();
   QString file = QFileDialog::getOpenFileName(this, tr("Select a .wav audio file."),
       QDesktopServices::storageLocation(QDesktopServices::MusicLocation),
       tr("Wav file (*.wav)"));
 
   filepath = file;
   player = new AudioPlayer(4096);
+  player->insert(new RMS(&MainWindow::rmscallback, this));
   QByteArray ba = filepath.toLocal8Bit();
   const char *c_str = ba.data();
   player->load(c_str);
@@ -38,7 +59,6 @@ void MainWindow::openfile()
 
   filepath = file;
 
-  stopAction->setDisabled(false);
   seekSlider->setDisabled(false);
 }
 
@@ -55,24 +75,27 @@ void MainWindow::playpause()
 
 void MainWindow::play()
 {
-  player->play();
-  event_loop_timer.start(50);
-  playing = true;
-  playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-  stopAction->setDisabled(false);
+  if (player) {
+    player->play();
+    event_loop_timer.start(10);
+    playing = true;
+    playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+  }
 }
 
 void MainWindow::pause()
 {
-  player->pause();
-  event_loop_timer.stop();
-  playing = false;
-  playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+  if (player) {
+    player->pause();
+    event_loop_timer.stop();
+    playing = false;
+    playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+  }
 }
 
 void MainWindow::seek(int seek)
 {
-  if (player) {
+  if (player && !current_time_advance_) {
     double pos = seek * player->duration() / seekSlider->maximum();
     if (playing) {
       player->pause();
@@ -86,16 +109,17 @@ void MainWindow::seek(int seek)
 
 void MainWindow::stop()
 {
-  player->pause();
-  player->seek(0);
-  playAction->setDisabled(false);
-  stopped();
-  seekSlider->setDisabled(true);
+  if (player) {
+    player->unload();
+    playAction->setDisabled(true);
+    filepath.clear();
+    stopped();
+    seekSlider->setDisabled(true);
+  }
 }
 
 void MainWindow::unload()
 {
-  stopAction->setDisabled(true);
   playing = false;
   if (player) {
     delete player;
@@ -106,14 +130,17 @@ void MainWindow::unload()
 
 void MainWindow::stopped()
 {
-  playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
   playing = false;
-  stopAction->setDisabled(true);
+  playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
   seekSlider->setDisabled(true);
 }
 
 void MainWindow::event_loop()
 {
+  current_time_advance_ = true;
+  int pos = player->current_time() / player->duration() * seekSlider->maximum();
+  seekSlider->setValue(pos);
+  current_time_advance_ = false;
   if (player && ! player->state_machine()) {
     event_loop_timer.stop();
     stop();
@@ -123,7 +150,6 @@ void MainWindow::event_loop()
 void MainWindow::dtest(){
   //QMessageBox::information(this, tr("Test Button!"),tr("You pressed it."));
   timeLcd->display("23:42");
-  dbm->newval(qrand()%200);
   /*
      AudioBuffer ab;
      read_file("../assets/amen.wav",ab);
@@ -150,9 +176,6 @@ void MainWindow::setupActions()
   playAction = new QAction(style()->standardIcon(QStyle::SP_MediaPlay), tr("Play"), this);
   playAction->setShortcut(tr("Ctrl+P"));
   playAction->setDisabled(true);
-  stopAction = new QAction(style()->standardIcon(QStyle::SP_MediaStop), tr("Stop"), this);
-  stopAction->setShortcut(tr("Ctrl+S"));
-  stopAction->setDisabled(true);
   nextAction = new QAction(style()->standardIcon(QStyle::SP_MediaSkipForward), tr("Next"), this);
   nextAction->setShortcut(tr("Ctrl+N"));
   previousAction = new QAction(style()->standardIcon(QStyle::SP_MediaSkipBackward), tr("Previous"), this);
@@ -166,7 +189,6 @@ void MainWindow::setupActions()
   aboutQtAction = new QAction(tr("About Qt"), this);
 
   connect(playAction, SIGNAL(triggered()), this, SLOT(playpause()));
-  connect(stopAction, SIGNAL(triggered()), this, SLOT(stop()));
 
   connect(addFilesAction, SIGNAL(triggered()), this, SLOT(openfile()));
   connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
@@ -193,15 +215,14 @@ void MainWindow::setupUi()
   QToolBar *bar = new QToolBar;
 
   bar->addAction(playAction);
-  bar->addAction(stopAction);
   bar->addAction(openAction);
 
   seekSlider = new QSlider(Qt::Horizontal, this);
   seekSlider->setFocusPolicy(Qt::StrongFocus);
-  seekSlider->setTickPosition(QSlider::TicksBothSides);
+  seekSlider->setTickPosition(QSlider::NoTicks);
   seekSlider->setTickInterval(10);
   seekSlider->setSingleStep(1);
-  seekSlider->setRange(0,100);
+  seekSlider->setRange(0,1000);
 
   dbm = new dBMeter(this);
   //     connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(55)));

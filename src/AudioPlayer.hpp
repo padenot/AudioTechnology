@@ -23,6 +23,7 @@ class AudioPlayer
     int load(const char* file);
     int unload();
     int seek(const double ms);
+    double current_time();
     int insert(Effect* effect);
     bool state_machine();
     double duration();
@@ -51,6 +52,7 @@ class AudioPlayer
     const size_t chunk_size_;
     RingBuffer<SamplesType,4>* ring_buffer_;
     std::atomic<int> playback_state_;
+    double current_time_;
 
     PaStreamParameters output_params_;
     PaStream *stream_;

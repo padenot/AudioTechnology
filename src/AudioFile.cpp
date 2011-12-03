@@ -86,8 +86,9 @@ double AudioFile::duration()
 }
 
 void AudioFile::get_duration() {
+  sf_count_t count;
   if (infos_.seekable) {
-    sf_count_t count = sf_seek(file_, 0, SEEK_SET);
+    count = sf_seek(file_, 0, SEEK_SET);
     if (count == -1) {
       VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
     }
@@ -102,5 +103,8 @@ void AudioFile::get_duration() {
     duration_ = -1.0f;
   }
 
-  sf_count_t count = sf_seek(file_, 0, SEEK_SET);
+  count = sf_seek(file_, 0, SEEK_SET);
+  if (count == -1) {
+    VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
+  }
 }

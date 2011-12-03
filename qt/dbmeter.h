@@ -5,17 +5,20 @@
 
 class dBMeter : public QWidget
 {
-Q_OBJECT
+  Q_OBJECT
 
-public:
-dBMeter(QWidget *parent = 0);
+  public:
+    dBMeter(QWidget *parent = 0);
 
-public slots:
-void newval(int val);
+  public slots:
+    void valueChanged(float* new_values, size_t size);
 
-protected:
-void paintEvent(QPaintEvent *event);
-int val; 
+  protected:
+    void paintEvent(QPaintEvent *event);
+    float* values_;
+    size_t size_;
+    size_t width_;
+    size_t height_;
 };
 
 #endif

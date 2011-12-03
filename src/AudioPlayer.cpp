@@ -42,11 +42,9 @@ bool AudioPlayer::state_machine()
 {
   switch(playback_state_) {
     case HAS_DATA:
-      printf("Has Data\n");
       break;
     case NEED_DATA:
       {
-        printf("Need Data\n");
         while(! ring_buffer_->full()) {
           size_t size = chunk_size_ * file_->channels();
           SamplesType b[size];
@@ -58,12 +56,8 @@ bool AudioPlayer::state_machine()
       }
       break;
     case SHOULD_STOP:
-      printf("should stop Data\n");
-      VAGG_LOG(VAGG_LOG_OK, "Draining audio.");
       break;
     case STOPPED:
-      printf("stopped\n");
-      VAGG_LOG(VAGG_LOG_OK, "Stopping audio.");
       return false;
       break;
   }
@@ -110,7 +104,14 @@ int AudioPlayer::seek(const double ms)
     prebuffer();
   }
 
+  current_time_ = ms;
+
   return 0;
+}
+
+double AudioPlayer::current_time()
+{
+  return current_time_;
 }
 
 int AudioPlayer::insert(Effect* effect)
@@ -212,8 +213,6 @@ int AudioPlayer::unload()
 
   Pa_Terminate();
 
-  delete ring_buffer_;
-
   return 0;
 }
 
@@ -265,7 +264,6 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
     size_t channels = file_->channels();
     SamplesType buffer[framesPerBuffer * channels];
     ring_buffer_->pop(buffer, framesPerBuffer * channels);
-    // XXX RMS
 
     size_t i = 0;
     while( i < framesPerBuffer * channels) {
@@ -277,6 +275,9 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
     if (effect_) {
       effect_->process(buffer, framesPerBuffer, file_->channels());
     }
+
+    double pos = current_time_ + static_cast<double>(framesPerBuffer) / file_->samplerate();
+    current_time_ = pos;
 
     if (playback_state_ == SHOULD_STOP) {
       if (ring_buffer_->available_read() == 0) {

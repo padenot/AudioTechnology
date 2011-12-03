@@ -1,14 +1,14 @@
 #include "AudioPlayer.hpp"
 #include "RMS.hpp"
 
-const char* filename = "assets/amen.wav";
+const char* filename = "assets/short.wav";
 
 float rms2db(float value)
 {
   return 10 * log10(value);
 }
 
-void rmscallback(float* values, size_t size)
+void rmscallback(float* values, size_t size, void* userdata)
 {
   printf("[");
   for (size_t i = 0; i < size - 1; i++) {
@@ -19,13 +19,14 @@ void rmscallback(float* values, size_t size)
 
 int main()
 {
+  while(1) {
   // 4096 : chunk size
   AudioPlayer p(4096);
   p.load(filename);
 
   // Create an RMS effect. It takes a callback which is called when results are
   // available.
-  RMS rms(&rmscallback);
+  RMS rms(&rmscallback, 0);
   // Insert the effect in the player a player can have only a single effect for
   // now.
   p.insert(&rms);
@@ -40,6 +41,7 @@ int main()
 
   // Release the data (AudioPlayer is an RAII class, so this is not mandatory).
   p.unload();
+  }
 
   return 0;
 }
