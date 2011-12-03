@@ -1,4 +1,4 @@
-#include <QtGui>
+
 
 #include <stdio.h>
 #include <sndfile.h>
@@ -18,11 +18,11 @@ static float rms2db(float value)
 void MainWindow::rmscallback(float* values, size_t size, void* user_data)
 {
   
-  VAGG_LOG(VAGG_LOG_DEBUG, "size %Zu  values %f",size, values[0]);
+ // VAGG_LOG(VAGG_LOG_DEBUG, "size %Zu  values %f",size, values[0]);
   
   MainWindow* mw = static_cast<MainWindow*>(user_data);
   for (size_t i = 0; i < size; i++) {
- VAGG_LOG(VAGG_LOG_DEBUG, "rmscb size %Zu  i %Zu  val %f",size, i, values[i]);
+// VAGG_LOG(VAGG_LOG_DEBUG, "rmscb size %Zu  i %Zu  val %f",size, i, values[i]);
     values[i] = rms2db(values[i]);
   }
   mw->rmscallback_m(values, size, user_data);
@@ -62,8 +62,11 @@ void MainWindow::openfile()
   playAction->setDisabled(false);
 
   filepath = file;
+  filenameLabel->setText(file);
+  
 
   seekSlider->setDisabled(false);
+  volumeSlider->setDisabled(false);
 }
 
 void MainWindow::playpause()
@@ -119,6 +122,7 @@ void MainWindow::stop()
     filepath.clear();
     stopped();
     seekSlider->setDisabled(true);
+    volumeSlider->setDisabled(true);
   }
 }
 
@@ -137,6 +141,7 @@ void MainWindow::stopped()
   playing = false;
   playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
   seekSlider->setDisabled(true);
+  volumeSlider->setDisabled(true);
 }
 
 void MainWindow::event_loop()
@@ -159,7 +164,7 @@ void MainWindow::event_loop()
 void MainWindow::about()
 {
   QMessageBox::information(this, tr("About Music Player"),
-      tr("This player is a demo for DT2410 Lab"));
+      tr("This player is a demo for DT2410 Lab 2011"));
 }
 
 void MainWindow::setupActions()
@@ -173,7 +178,7 @@ void MainWindow::setupActions()
   nextAction->setShortcut(tr("Ctrl+N"));
   previousAction = new QAction(style()->standardIcon(QStyle::SP_MediaSkipBackward), tr("Previous"), this);
   previousAction->setShortcut(tr("Ctrl+R"));
-  addFilesAction = new QAction(tr("Add &Files"), this);
+  addFilesAction = new QAction(tr("Open &File"), this);
   addFilesAction->setShortcut(tr("Ctrl+F"));
   exitAction = new QAction(tr("E&xit"), this);
   exitAction->setShortcuts(QKeySequence::Quit);
@@ -210,21 +215,17 @@ void MainWindow::setupUi()
   bar->addAction(playAction);
   bar->addAction(openAction);
 
+
   seekSlider = new QSlider(Qt::Horizontal, this);
   seekSlider->setFocusPolicy(Qt::StrongFocus);
   seekSlider->setTickPosition(QSlider::NoTicks);
   seekSlider->setTickInterval(10);
   seekSlider->setSingleStep(1);
   seekSlider->setRange(0,1000);
+  seekSlider->setDisabled(true);
 
   dbm = new dBMeter(this);
-  //     connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(55)));
-  //  connect(testAction, SIGNAL(triggered()), dbm, SLOT(newval(int)));
-  /*
-     volumeSlider = new Phonon::VolumeSlider(this);
-     volumeSlider->setAudioOutput(audioOutput);
-     volumeSlider->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-     */
+
 
   volumeSlider = new QSlider(Qt::Horizontal, this);
   volumeSlider->setFocusPolicy(Qt::StrongFocus);
@@ -232,6 +233,8 @@ void MainWindow::setupUi()
   volumeSlider->setTickInterval(10);
   //volumeSlider->setSingleStep(1);
   volumeSlider->setRange(0,100);
+  volumeSlider->setDisabled(true);
+  
 
   QLabel *volumeLabel = new QLabel;
   volumeLabel->setPixmap(QPixmap("images/volume.png"));
@@ -241,14 +244,18 @@ void MainWindow::setupUi()
 
   timeLcd = new QLCDNumber;
   timeLcd->setPalette(palette);
+  
+  filenameLabel = new QLabel("load file!");
 
-  QStringList headers;
+
+  /*QStringList headers;
   headers << tr("Title");
+  */
 
   QHBoxLayout *dbmLayout = new QHBoxLayout;
   dbmLayout->addWidget(dbm);
 
-  connect(volumeSlider, SIGNAL(valueChanged(int)), dbm, SLOT(newval(int)));
+  connect(volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(set_volume(int)));
 
   QHBoxLayout *seekerLayout = new QHBoxLayout;
   seekerLayout->addWidget(seekSlider);
@@ -261,7 +268,9 @@ void MainWindow::setupUi()
   playbackLayout->addWidget(volumeSlider);
 
   QHBoxLayout *mid = new QHBoxLayout;
+  mid->addWidget(filenameLabel);
   mid->addLayout(dbmLayout);
+
 
   QVBoxLayout *mainLayout = new QVBoxLayout;
   mainLayout->addLayout(mid);
@@ -272,5 +281,12 @@ void MainWindow::setupUi()
   widget->setLayout(mainLayout);
 
   setCentralWidget(widget);
-  setWindowTitle("player wtf");
+  setWindowTitle("wav player 0.1");
+}
+
+void MainWindow::set_volume(int val)
+{
+	float vol = (float)val/100;
+	//VAGG_LOG(VAGG_LOG_DEBUG, "val %d -- vol %f",val, vol);
+	player->set_volume(vol);
 }

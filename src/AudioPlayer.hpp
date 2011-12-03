@@ -27,6 +27,7 @@ class AudioPlayer
     int insert(Effect* effect);
     bool state_machine();
     double duration();
+    void set_volume(float vol);
   protected:
     void prebuffer();
     /** Callbacks **/
@@ -58,6 +59,8 @@ class AudioPlayer
     PaStream *stream_;
 
     Effect* effect_;
+    
+    float volume_;
 };
 
 #endif

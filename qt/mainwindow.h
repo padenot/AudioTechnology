@@ -3,13 +3,9 @@
 
  #include <QMainWindow>
  #include <QTimer>
- #include <phonon/audiooutput.h>
- #include <phonon/seekslider.h>
- #include <phonon/mediaobject.h>
- #include <phonon/volumeslider.h>
- #include <phonon/backendcapabilities.h>
-// #include <QList>
  #include <QSlider>
+ #include <QtGui>
+ 
  #include "dbmeter.h"
 
 #include "AudioPlayer.hpp"
@@ -36,8 +32,10 @@
      void stop();
      void event_loop();
      void seek(int where);
+     void set_volume(int val);
 
  private:
+
      void pause();
      void play();
      void setupActions();
@@ -47,6 +45,7 @@
      void stopped();
      static void rmscallback(float* values, size_t size, void* userdata);
      void rmscallback_m(float* values, size_t size, void* userdata);
+
 
      dBMeter *dbm;
 
@@ -62,6 +61,7 @@
      QAction *aboutAction;
      QAction *aboutQtAction;
      QLCDNumber *timeLcd;
+	 QLabel * filenameLabel;
      QString filepath;
      AudioPlayer* player;
      QTimer event_loop_timer;

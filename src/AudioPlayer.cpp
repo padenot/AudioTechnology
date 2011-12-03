@@ -13,6 +13,7 @@ AudioPlayer::AudioPlayer(const size_t chunk_size)
   :chunk_size_(chunk_size)
   ,playback_state_(STOPPED)
   ,effect_(0)
+  ,volume_(0.0)
 { }
 
 AudioPlayer::~AudioPlayer()
@@ -268,7 +269,7 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
     size_t i = 0;
     while( i < framesPerBuffer * channels) {
       for (size_t c = 0; c < channels; c++) {
-        *out++ = buffer[i++];
+        *out++ = buffer[i++]*volume_;
       }
     }
 
@@ -293,4 +294,13 @@ int AudioPlayer::audio_callback_m(const void * VAGG_UNUSED(inputBuffer),
     }
   }
   return paContinue;
+}
+
+
+void AudioPlayer::set_volume(float vol){
+  if (vol > 1 || vol < 0) {
+    VAGG_LOG(VAGG_LOG_FATAL, "Volume out of range 0...1. Was %f", vol);
+    vol = 0;
+  }
+	volume_ = vol;
 }
