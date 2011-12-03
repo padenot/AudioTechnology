@@ -28,6 +28,8 @@ class AudioPlayer
     bool state_machine();
     double duration();
     void set_volume(float vol);
+    int channels();  
+    int samplerate();
   protected:
     void prebuffer();
     /** Callbacks **/

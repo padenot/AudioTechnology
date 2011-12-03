@@ -22,7 +22,7 @@
      MainWindow();
 
      QSize sizeHint() const {
-         return QSize(600, 500);
+         return QSize(600, 400);
      }
 
  private slots:
@@ -61,7 +61,8 @@
      QAction *aboutAction;
      QAction *aboutQtAction;
      QLCDNumber *timeLcd;
-	 QLabel * filenameLabel;
+	 QLabel *filenameLabel;
+	 QLabel *infoLabel;
      QString filepath;
      AudioPlayer* player;
      QTimer event_loop_timer;

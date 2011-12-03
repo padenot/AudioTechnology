@@ -13,7 +13,7 @@ AudioPlayer::AudioPlayer(const size_t chunk_size)
   :chunk_size_(chunk_size)
   ,playback_state_(STOPPED)
   ,effect_(0)
-  ,volume_(0.0)
+  ,volume_(1.0)
 { }
 
 AudioPlayer::~AudioPlayer()
@@ -125,6 +125,22 @@ double AudioPlayer::duration()
 {
   if (file_) {
     return file_->duration();
+  }
+  return 0;
+}
+
+int AudioPlayer::channels()
+{
+  if (file_) {
+    return file_->channels();
+  }
+  return 0;
+}
+
+int AudioPlayer::samplerate()
+{
+  if (file_) {
+    return file_->samplerate();
   }
   return 0;
 }
