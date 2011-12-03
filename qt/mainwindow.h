@@ -32,8 +32,6 @@
  private slots:
      void openfile();
      void about();
-     void tick(qint64 time);
-     void dtest();
      void playpause();
      void stop();
      void event_loop();

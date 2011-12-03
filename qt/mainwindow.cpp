@@ -19,7 +19,6 @@ void MainWindow::rmscallback(float* values, size_t size, void* user_data)
 {
   MainWindow* mw = static_cast<MainWindow*>(user_data);
   for (size_t i = 0; i < size; i++) {
-    VAGG_LOG(VAGG_LOG_DEBUG, "%f ", values[i]);
     values[i] = rms2db(values[i]);
   }
   mw->rmscallback_m(values, size, user_data);
@@ -77,7 +76,7 @@ void MainWindow::play()
 {
   if (player) {
     player->play();
-    event_loop_timer.start(10);
+    event_loop_timer.start(1);
     playing = true;
     playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
   }
@@ -86,8 +85,8 @@ void MainWindow::play()
 void MainWindow::pause()
 {
   if (player) {
-    player->pause();
     event_loop_timer.stop();
+    player->pause();
     playing = false;
     playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
   }
@@ -138,8 +137,13 @@ void MainWindow::stopped()
 void MainWindow::event_loop()
 {
   current_time_advance_ = true;
-  int pos = player->current_time() / player->duration() * seekSlider->maximum();
+  double current_time = player->current_time();
+  int pos = current_time / player->duration() * seekSlider->maximum();
   seekSlider->setValue(pos);
+  int seconds = static_cast<int>(current_time) % 60;
+  int minutes = current_time / 60;
+  QString text(QString::number(minutes) + " " + QString::number(seconds));
+  timeLcd->display(text);
   current_time_advance_ = false;
   if (player && ! player->state_machine()) {
     event_loop_timer.stop();
@@ -147,26 +151,10 @@ void MainWindow::event_loop()
   }
 }
 
-void MainWindow::dtest(){
-  //QMessageBox::information(this, tr("Test Button!"),tr("You pressed it."));
-  timeLcd->display("23:42");
-  /*
-     AudioBuffer ab;
-     read_file("../assets/amen.wav",ab);
-     */
-}
-
 void MainWindow::about()
 {
   QMessageBox::information(this, tr("About Music Player"),
       tr("This player is a demo for DT2410 Lab"));
-}
-
-void MainWindow::tick(qint64 time)
-{
-  QTime displayTime(0, (time / 60000) % 60, (time / 1000) % 60);
-
-  timeLcd->display(displayTime.toString("mm:ss"));
 }
 
 void MainWindow::setupActions()
