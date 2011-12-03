@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#define MAX_CHANNELS 4
+
 class dBMeter : public QWidget
 {
   Q_OBJECT
@@ -15,7 +17,7 @@ class dBMeter : public QWidget
 
   protected:
     void paintEvent(QPaintEvent *event);
-    float* values_;
+    float values_[MAX_CHANNELS];
     size_t size_;
     size_t width_;
     size_t height_;

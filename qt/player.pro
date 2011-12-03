@@ -2,7 +2,9 @@ HEADERS   += mainwindow.h \
              dbmeter.h \
              ../src/AudioFile.hpp \
              ../src/AudioPlayer.hpp \
-             ../src/RingBuffer.hpp
+             ../src/RingBuffer.hpp \
+             ../src/Effect.hpp \
+             ../src/RMS.hpp
 
 SOURCES   += main.cpp \
              dbmeter.cpp \

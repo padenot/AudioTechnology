@@ -3,9 +3,8 @@
 #include "dbmeter.h"
 #include "vagg/vagg.h"
 
-
 dBMeter::dBMeter(QWidget *parent)
-: QWidget(parent),values_(0),width_(40),height_(260)
+: QWidget(parent),size_(1),width_(40),height_(260)
 {
   setFixedSize(width_, height_);
 }
@@ -26,11 +25,12 @@ void dBMeter::paintEvent(QPaintEvent *)
 }
 
 void dBMeter::valueChanged(float* values, size_t size) {
-  if (size != size_) {
-    delete values_;
-    values_ = new float[size];
+  if (size > MAX_CHANNELS) {
+    VAGG_LOG(VAGG_LOG_FATAL, "Only %d channels at most", MAX_CHANNELS);
   }
-  values_ = values;
+  for (size_t i = 0; i < size; i++) {
+    values_[i] = values[i];
+  }
   size_ = size;
   this->update();
 }
