@@ -12,13 +12,17 @@
 
 static float rms2db(float value)
 {
-  return 10 * log10(value);
+  return 20 * log10(value);
 }
 
 void MainWindow::rmscallback(float* values, size_t size, void* user_data)
 {
+  
+  VAGG_LOG(VAGG_LOG_DEBUG, "size %Zu  values %f",size, values[0]);
+  
   MainWindow* mw = static_cast<MainWindow*>(user_data);
   for (size_t i = 0; i < size; i++) {
+ VAGG_LOG(VAGG_LOG_DEBUG, "rmscb size %Zu  i %Zu  val %f",size, i, values[i]);
     values[i] = rms2db(values[i]);
   }
   mw->rmscallback_m(values, size, user_data);
@@ -51,6 +55,7 @@ void MainWindow::openfile()
   filepath = file;
   player = new AudioPlayer(4096);
   player->insert(new RMS(&MainWindow::rmscallback, this));
+
   QByteArray ba = filepath.toLocal8Bit();
   const char *c_str = ba.data();
   player->load(c_str);

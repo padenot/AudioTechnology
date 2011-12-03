@@ -14,8 +14,13 @@ class RMS : public Effect
 
     // |length * channels| is the size of |samples|.
     virtual void process(SamplesType* samples, size_t length, size_t channels)
-    {
-      float acc[channels];
+    {float acc[channels];
+	  
+	for(size_t i = 0; i<channels; i++){
+	 	acc[i]=0;
+	}
+   
+      
       for(size_t c = 0; c < channels; c++) {
         for (size_t i = c; i < length * channels; i+=channels) {
           acc[c] += samples[i] * samples[i];
