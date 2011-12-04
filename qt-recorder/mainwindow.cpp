@@ -16,12 +16,8 @@ static float rms2db(float value)
 
 void MainWindow::rmscallback(float* values, size_t size, void* user_data)
 {
-
-  // VAGG_LOG(VAGG_LOG_DEBUG, "size %Zu  values %f",size, values[0]);
-
   MainWindow* mw = static_cast<MainWindow*>(user_data);
   for (size_t i = 0; i < size; i++) {
-    // VAGG_LOG(VAGG_LOG_DEBUG, "rmscb size %Zu  i %Zu  val %f",size, i, values[i]);
     values[i] = rms2db(values[i]);
   }
   mw->rmscallback_m(values, size, user_data);
@@ -51,15 +47,13 @@ void MainWindow::openfile()
       tr("Wav file (*.wav)"));
 
   if(file != 0) {
-    qDebug() << file;
     filepath = file;
     recorder = new AudioRecorder(4096);
     recorder->insert(new RMS(&MainWindow::rmscallback, this));
 
     QByteArray ba = filepath.toAscii();
-    const char *c_str = ba.data();
-    printf("%s", c_str);
-    recorder->open(c_str);
+    printf("%s", ba);
+    recorder->open(ba);
     recordAction->setDisabled(false);
 
     filepath = file;

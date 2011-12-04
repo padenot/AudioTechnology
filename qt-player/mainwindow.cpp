@@ -15,12 +15,8 @@ static float rms2db(float value)
 
 void MainWindow::rmscallback(float* values, size_t size, void* user_data)
 {
-  
- // VAGG_LOG(VAGG_LOG_DEBUG, "size %Zu  values %f",size, values[0]);
-  
   MainWindow* mw = static_cast<MainWindow*>(user_data);
   for (size_t i = 0; i < size; i++) {
-// VAGG_LOG(VAGG_LOG_DEBUG, "rmscb size %Zu  i %Zu  val %f",size, i, values[i]);
     values[i] = rms2db(values[i]);
   }
   mw->rmscallback_m(values, size, user_data);
@@ -32,8 +28,8 @@ void MainWindow::rmscallback_m(float* values, size_t size, void* user_data)
 }
 
 MainWindow::MainWindow()
-  :player(0)
-  ,playing(false)
+:player(0)
+,playing(false)
 {
   setupActions();
   setupMenus();
@@ -49,26 +45,26 @@ void MainWindow::openfile()
   QString file = QFileDialog::getOpenFileName(this, tr("Select a .wav audio file."),
       QDesktopServices::storageLocation(QDesktopServices::MusicLocation),
       tr("Wav file (*.wav)"));
-  
- if(file!=0){
-	  filepath = file;
-	  player = new AudioPlayer(4096);
-	  player->insert(new RMS(&MainWindow::rmscallback, this));
 
-	  QByteArray ba = filepath.toLocal8Bit();
-	  const char *c_str = ba.data();
-	  player->load(c_str);
-	  playAction->setDisabled(false);
+  if(file!=0){
+    filepath = file;
+    player = new AudioPlayer(4096);
+    player->insert(new RMS(&MainWindow::rmscallback, this));
 
-	  filepath = file;
-	  filenameLabel->setText(file);
-	  
-	  QString qs;
-	  qs = QString("Duration: %1 sec | Channels %2 | Samplerate %3 Hz").arg(player->duration()).arg(player->channels()).arg(player->samplerate());	  
-	  infoLabel->setText(qs);
-	  seekSlider->setDisabled(false);
-	  volumeSlider->setDisabled(false);
- }
+    QByteArray ba = filepath.toLocal8Bit();
+    const char *c_str = ba.data();
+    player->load(c_str);
+    playAction->setDisabled(false);
+
+    filepath = file;
+    filenameLabel->setText(file);
+
+    QString qs;
+    qs = QString("Duration: %1 sec | Channels %2 | Samplerate %3 Hz").arg(player->duration()).arg(player->channels()).arg(player->samplerate());	  
+    infoLabel->setText(qs);
+    seekSlider->setDisabled(false);
+    volumeSlider->setDisabled(false);
+  }
 }
 
 void MainWindow::playpause()
@@ -179,11 +175,11 @@ void MainWindow::setupActions()
   playAction->setShortcut(tr("Ctrl+P"));
   playAction->setDisabled(true);
   /*
-  nextAction = new QAction(style()->standardIcon(QStyle::SP_MediaSkipForward), tr("Next"), this);
-  nextAction->setShortcut(tr("Ctrl+N"));
-  previousAction = new QAction(style()->standardIcon(QStyle::SP_MediaSkipBackward), tr("Previous"), this);
-  previousAction->setShortcut(tr("Ctrl+R"));
-  */
+     nextAction = new QAction(style()->standardIcon(QStyle::SP_MediaSkipForward), tr("Next"), this);
+     nextAction->setShortcut(tr("Ctrl+N"));
+     previousAction = new QAction(style()->standardIcon(QStyle::SP_MediaSkipBackward), tr("Previous"), this);
+     previousAction->setShortcut(tr("Ctrl+R"));
+     */
   addFilesAction = new QAction(tr("Open &File"), this);
   addFilesAction->setShortcut(tr("Ctrl+F"));
   exitAction = new QAction(tr("E&xit"), this);
@@ -226,7 +222,7 @@ void MainWindow::setupUi()
   seekSlider = new QSlider(Qt::Horizontal, this);
   seekSlider->setFocusPolicy(Qt::StrongFocus);
   seekSlider->setTickPosition(QSlider::NoTicks);
-//  seekSlider->setTickInterval(10);
+  //  seekSlider->setTickInterval(10);
   seekSlider->setSingleStep(1);
   seekSlider->setRange(0,1000);
   seekSlider->setDisabled(true);
@@ -239,7 +235,7 @@ void MainWindow::setupUi()
   volumeSlider->setRange(0,100);
   volumeSlider->setValue(100);
   volumeSlider->setDisabled(true);
-  
+
 
   QLabel *volumeLabel = new QLabel;
   volumeLabel->setPixmap(QPixmap("images/volume.png"));
@@ -249,22 +245,15 @@ void MainWindow::setupUi()
 
   timeLcd = new QLCDNumber;
   timeLcd->setPalette(palette);
-  
+
   filenameLabel = new QLabel("load file!");
   infoLabel = new QLabel("");
-  
+
   dbm = new dBMeter(this);
-
-
-  /*QStringList headers;
-  headers << tr("Title");
-  */
 
   QVBoxLayout *textLayout = new QVBoxLayout;
   textLayout->addWidget(filenameLabel);
   textLayout->addWidget(infoLabel);
-
-
 
   QHBoxLayout *seekerLayout = new QHBoxLayout;
   seekerLayout->addWidget(seekSlider);
@@ -291,13 +280,12 @@ void MainWindow::setupUi()
 
   setCentralWidget(widget);
   setWindowTitle("wav player 0.1");
-  
+
   connect(volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(set_volume(int)));
 }
 
 void MainWindow::set_volume(int val)
 {
-	float vol = (float)val/100;
-	//VAGG_LOG(VAGG_LOG_DEBUG, "val %d -- vol %f",val, vol);
-	player->set_volume(vol);
+  float vol = (float)val/100;
+  player->set_volume(vol);
 }

@@ -103,7 +103,6 @@ void AudioFile::get_duration() {
       VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
     }
     duration_ = (double)count / infos_.samplerate;
-    VAGG_LOG(VAGG_LOG_DEBUG, "Duration for %s is %lf", filename_, duration_);
   } else {
     duration_ = -1.0f;
   }

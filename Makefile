@@ -35,7 +35,7 @@ $(OBJ)/%.o : $(SRC)/%.cpp
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) -c $< -o $@
 
 # Targets
-all :  $(BIN)/read_file_buffers_refactor $(BIN)/write_file_buffers $(BIN)/write_file_buffers_refactor
+all :  $(BIN)/read_file_buffers_refactor $(BIN)/write_file_buffers $(BIN)/write_file_buffers_refactor qt-recorder/recorder qt-player/player
 #all : $(BIN)/read_file $(BIN)/write_file $(BIN)/read_file_buffer $(BIN)/ringbuffer_test  $(BIN)/read_file_buffers_refactor
 
 clean :
@@ -47,6 +47,12 @@ mrproper:
 	@echo "Cleaning $(BIN), $(OBJ) & $(DOC)..."
 	rm -r $(BIN)/* $(OBJ)/* $(DOC)/*
 	@echo "Project directories are now clean."
+
+qt-recorder/recorder:
+	cd qt-recorder && qmake recorder.pro && make
+
+qt-player/player:
+	cd qt-player && qmake player.pro && make
 
 #$(BIN)/read_file_buffer: $(OBJ)/read_file_buffer.o $(OBJ)/AudioFile.o
 	#@echo "${COL_ON}Linking $< ...${COL_OFF}"
