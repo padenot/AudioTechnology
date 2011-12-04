@@ -35,8 +35,8 @@ $(OBJ)/%.o : $(SRC)/%.cpp
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) -c $< -o $@
 
 # Targets
-all :  $(BIN)/read_file_buffers_refactor
-#all : $(BIN)/read_file $(BIN)/write_file $(BIN)/read_file_buffer $(BIN)/ringbuffer_test $(BIN)/write_file_buffers $(BIN)/read_file_buffers_refactor
+all :  $(BIN)/read_file_buffers_refactor $(BIN)/write_file_buffers $(BIN)/write_file_buffers_refactor
+#all : $(BIN)/read_file $(BIN)/write_file $(BIN)/read_file_buffer $(BIN)/ringbuffer_test  $(BIN)/read_file_buffers_refactor
 
 clean :
 	@echo "Cleaning $(BIN) & $(OBJ)"
@@ -68,7 +68,11 @@ $(BIN)/write_file_buffers: $(OBJ)/write_file_buffers.o $(OBJ)/AudioFile.o
 	@echo "${COL_ON}Linking $< ...${COL_OFF}"
 	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -D DEBUG_RINGBUFFER -o $@
 
-$(BIN)/read_file_buffers_refactor: $(OBJ)/write_file_buffers_refactor.o $(OBJ)/AudioFile.o $(OBJ)/AudioPlayer.o
+$(BIN)/read_file_buffers_refactor: $(OBJ)/read_file_buffers_refactor.o $(OBJ)/AudioFile.o $(OBJ)/AudioPlayer.o
+	@echo "${COL_ON}Linking $< ...${COL_OFF}"
+	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -D DEBUG_RINGBUFFER -o $@
+
+$(BIN)/write_file_buffers_refactor: $(OBJ)/write_file_buffers_refactor.o $(OBJ)/AudioFile.o $(OBJ)/AudioRecorder.o
 	@echo "${COL_ON}Linking $< ...${COL_OFF}"
 	$(CXX) $(CPPFLAGS) $+ $(LDFLAGS) $(STATIC) -D DEBUG_RINGBUFFER -o $@
 
@@ -82,4 +86,6 @@ $(OBJ)/ringbuffer_test.o: $(SRC)/ringbuffer_test.cpp $(SRC)/RingBuffer.hpp
 $(OBJ)/write_file_buffers.o: $(SRC)/write_file_buffers.cpp $(SRC)/AudioFile.cpp
 $(OBJ)/read_file_buffers_refactor.o: $(SRC)/write_file_buffers_refactor.cpp $(SRC)/AudioFile.cpp $(SRC)/RingBuffer.hpp
 $(OBJ)/AudioPlayer.o: $(SRC)/AudioPlayer.cpp $(SRC)/AudioFile.cpp $(SRC)/RingBuffer.hpp
+$(OBJ)/AudioRecorder.o: $(SRC)/AudioRecorder.cpp $(SRC)/AudioFile.cpp $(SRC)/RingBuffer.hpp
+
 

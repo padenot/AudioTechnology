@@ -9,6 +9,10 @@
 #include "AudioFile.hpp"
 #include <atomic>
 
+#ifdef __linux__
+  #include <sys/statvfs.h>
+#endif
+
 using namespace std;
 
 const char* FILENAME = "recordings/out_buffers.wav";
@@ -52,7 +56,7 @@ static int callback(const void * inputBuffer,
                     PaStreamCallbackFlags VAGG_UNUSED(statusFlags),
                     void *userData)
 {
-  RingBuffer* ring = (RingBuffer*)userData;
+  RingBuffer<SamplesType, 4>* ring = (RingBuffer<SamplesType, 4>*)userData;
   SamplesType* in = (SamplesType*)inputBuffer;
 
   if (recording_status == SHOULD_STOP) {
@@ -61,7 +65,7 @@ static int callback(const void * inputBuffer,
 
   recording_status = RECORDING;
 
-  ring->write_raw(in, framesPerBuffer);
+  ring->push(in, framesPerBuffer);
 
   return paContinue;
 }
@@ -72,17 +76,31 @@ static void stream_finished( void* VAGG_UNUSED(user_data))
   VAGG_LOG(VAGG_LOG_OK, "Finished.\n");
 }
 
+static long long unsigned get_free_disk_space(const char* path)
+{
+#ifdef __linux__
+  struct statvfs b;
+  VAGG_SYSCALL(statvfs(path, &b));
+  long long unsigned size = (long long unsigned)b.f_bavail * b.f_bsize;
+  return size;
+#else
+  #warning Free disk space is not supported on that system.
+  return -1;
+#endif
+}
+
 int main(void)
 {
   bool record = true;
-  AudioFile file(FILENAME, CHUNK_SIZE, SAMPLERATE, CHANNELS);
+  // The mic we use is mono
+  AudioFile file(FILENAME);
   file.open(AudioFile::Write);
 
   PaStreamParameters input_params;
   PaStream *stream;
   PaError err;
 
-  RingBuffer buffer(4096, 2);
+  RingBuffer<SamplesType, 4> buffer(4096);
 
   struct sigaction action;
   struct sigaction save;
@@ -146,19 +164,20 @@ int main(void)
         break;
       case RECORDING:
         if (buffer.available_read() != 0) {
-          AudioBuffer b(CHUNK_SIZE);
-          buffer.read(&b);
-          file.write_some(b);
+          SamplesType b[CHUNK_SIZE];
+          buffer.pop(b, CHUNK_SIZE);
+          file.write_some(b, CHUNK_SIZE);
         }
+        VAGG_LOG(VAGG_LOG_OK, "Disk space availale : %lfGo", get_free_disk_space(FILENAME)/1024./1024./1024.);
         break;
     }
     Pa_Sleep(EVENT_LOOP_FREQUENCY);
   }
 
-	err = Pa_CloseStream( stream );
-	if(err != paNoError) {
-		goto error;
-	}
+  err = Pa_CloseStream( stream );
+  if(err != paNoError) {
+    goto error;
+  }
 
   Pa_Terminate();
 

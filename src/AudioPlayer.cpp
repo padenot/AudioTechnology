@@ -65,7 +65,7 @@ bool AudioPlayer::state_machine()
   return true;
 }
 
-void AudioPlayer::finished_callback( void* user_data)
+void AudioPlayer::finished_callback(void* user_data)
 {
   AudioPlayer* a = static_cast<AudioPlayer*>(user_data);
   a->finished_callback_m(user_data);
@@ -318,5 +318,5 @@ void AudioPlayer::set_volume(float vol){
     VAGG_LOG(VAGG_LOG_FATAL, "Volume out of range 0...1. Was %f", vol);
     vol = 0;
   }
-	volume_ = vol;
+  volume_ = vol;
 }

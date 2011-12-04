@@ -18,9 +18,13 @@ AudioFile::~AudioFile()
 
 int AudioFile::open(const AudioFile::Mode mode)
 {
+  if (mode == Write) {
+    infos_.samplerate = 44100;
+    infos_.channels = 1;
+  }
   file_ = sf_open(filename_, mode, &infos_);
   if (file_ == NULL) {
-    VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
+    VAGG_LOG(VAGG_LOG_FATAL, "Open file error : %s", sf_strerror(file_));
     return -1;
   } else {
     VAGG_LOG(VAGG_LOG_OK, "File %s opened", filename_);
@@ -107,4 +111,9 @@ void AudioFile::get_duration() {
   if (count == -1) {
     VAGG_LOG(VAGG_LOG_FATAL, "%s", sf_strerror(file_));
   }
+}
+
+const char* AudioFile::path()
+{
+  return filename_;
 }

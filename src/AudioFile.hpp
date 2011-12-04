@@ -51,6 +51,7 @@ class AudioFile
     int samplerate();
 
     double duration();
+    const char* path();
   protected:
     void get_duration();
     /**
