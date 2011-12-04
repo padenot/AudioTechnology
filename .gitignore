@@ -6,5 +6,5 @@ obj/*
 recordings/*
 assets/pod159.wav
 moc_*
-qt/Makefile
-qt/player
+qt-player/Makefile
+qt-player/player
