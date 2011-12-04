@@ -228,7 +228,7 @@ void MainWindow::setupUi()
   seekSlider->setTickPosition(QSlider::NoTicks);
 //  seekSlider->setTickInterval(10);
   seekSlider->setSingleStep(1);
-  seekSlider->setRange(0,100);
+  seekSlider->setRange(0,1000);
   seekSlider->setDisabled(true);
 
   volumeSlider = new QSlider(Qt::Horizontal, this);
