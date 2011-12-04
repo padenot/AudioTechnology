@@ -8,3 +8,5 @@ assets/pod159.wav
 moc_*
 qt-player/Makefile
 qt-player/player
+qt-recorder/Makefile
+qt-recorder/recorder

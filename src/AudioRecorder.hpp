@@ -23,6 +23,7 @@ class AudioRecorder
     int insert(Effect* effect);
     int stop();
     double current_time();
+    long long unsigned free_disk_space();
   protected:
     /** Callbacks **/
     static int audio_callback(const void * inputBuffer,

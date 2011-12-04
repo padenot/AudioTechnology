@@ -14,6 +14,7 @@ AudioFile::~AudioFile()
   } else {
     VAGG_LOG(VAGG_LOG_OK, "File %s closed.", filename_);
   }
+  delete [] filename_;
 }
 
 int AudioFile::open(const AudioFile::Mode mode)

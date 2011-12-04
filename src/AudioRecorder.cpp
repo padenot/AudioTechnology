@@ -18,7 +18,14 @@ static long long unsigned get_free_disk_space(const char* path)
 {
 #ifdef __linux__
   struct statvfs b;
-  VAGG_SYSCALL(statvfs(path, &b));
+  int err = statvfs(path, &b);
+  if(err == -1 && errno != ENOENT) {
+    VAGG_LOG(VAGG_LOG_WARNING, "Could not stat the filesystem.");
+    return -1;
+  }
+  if (errno == ENOENT) {
+    VAGG_LOG(VAGG_LOG_WARNING, "Cannot stat the fs for %s", path);
+  }
   long long unsigned size = (long long unsigned)b.f_bavail * b.f_bsize;
   return size;
 #else
@@ -46,8 +53,11 @@ AudioRecorder::~AudioRecorder()
 
 int AudioRecorder::open(const char* file)
 {
+  size_t s = strlen(file);
+  char* filename = new char[s];
+  strncpy(filename, file, s);
   PaError err;
-  file_ = new AudioFile(file);
+  file_ = new AudioFile(filename);
 
   if ((err = file_->open(AudioFile::Write))) {
     HANDLE_PA_ERROR(err);
@@ -107,25 +117,18 @@ bool AudioRecorder::state_machine()
 {
   switch(recording_status_) {
     case STOPPED:
-      VAGG_LOG(VAGG_LOG_WARNING, "Stopped");
       return false;
       break;
     case STOP_REQUESTED:
-      VAGG_LOG(VAGG_LOG_WARNING, "Stop requested");
       break;
     case SHOULD_STOP:
-      VAGG_LOG(VAGG_LOG_WARNING, "Should stop");
       break;
     case RECORDING:
-      VAGG_LOG(VAGG_LOG_WARNING, "Recording");
       if (ring_buffer_->available_read() != 0) {
         SamplesType b[chunk_size_];
         ring_buffer_->pop(b, chunk_size_);
         file_->write_some(b, chunk_size_);
       }
-      // In gigaoctet
-      VAGG_LOG(VAGG_LOG_OK, "Disk space availale : %lfGo",
-          get_free_disk_space(file_->path())/1024./1024./1024.);
       break;
   }
   return true;
@@ -158,6 +161,11 @@ int AudioRecorder::stop()
   Pa_Terminate();
 
   return 0;
+}
+
+long long unsigned AudioRecorder::free_disk_space()
+{
+  return get_free_disk_space(file_->path());
 }
 
 double AudioRecorder::current_time()
