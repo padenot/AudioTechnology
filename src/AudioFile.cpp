@@ -1,8 +1,10 @@
 #include "AudioFile.hpp"
 
 AudioFile::AudioFile(const char* filename, int format)
-:filename_(filename)
 {
+  size_t s = strlen(filename);
+  filename_ = new char[s];
+  strncpy(filename_, filename, s);
   infos_.format = format;
   VAGG_SYSCALL(sf_format_check(&infos_));
 }
@@ -36,7 +38,7 @@ int AudioFile::open(const AudioFile::Mode mode)
 
 int AudioFile::seek(double ms)
 {
-  if (infos_.seekable) {
+  if (infos_.seekable && ms * 1000 <= duration_) {
     sf_count_t offset = ms * infos_.samplerate * infos_.channels;
     sf_count_t count = sf_seek(file_, offset, SEEK_SET);
     if (count == -1) {
@@ -70,7 +72,7 @@ size_t AudioFile::write_some(AudioBuffer buffer, size_t size)
   size_t count;
   count = sf_writef_float(file_, buffer, size);
   if (count != size) {
-    VAGG_LOG(VAGG_LOG_WARNING, "Bad read, asked=%zu, written=%zu", size, count);
+    VAGG_LOG(VAGG_LOG_WARNING, "Bad write, asked=%zu, written=%zu", size, count);
   }
   return count;
 }

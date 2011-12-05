@@ -48,12 +48,10 @@ void MainWindow::openfile()
 
   if(file!=0){
     filepath = file;
-    
-   //if(player){
-   // 	delete player;
-   // 	player = 0;
-   // }
-    
+    if(player){
+      delete player;
+      player = 0;
+    }
     player = new AudioPlayer(4096);
     player->insert(new RMS(&MainWindow::rmscallback, this));
 
@@ -66,9 +64,11 @@ void MainWindow::openfile()
     filenameLabel->setText(file);
 
     QString qs;
-    qs = QString("Duration: %1 sec | Channels %2 | Samplerate %3 Hz").arg(player->duration()).arg(player->channels()).arg(player->samplerate());	  
+    qs = QString("Duration: %1 sec | Channels %2 | Samplerate %3 Hz").arg(player->duration()).arg(player->channels()).arg(player->samplerate());    
     infoLabel->setText(qs);
     seekSlider->setDisabled(false);
+    seekSlider->setValue(0);
+    timeLcd->display("00:00");
     volumeSlider->setDisabled(false);
   }
 }
@@ -88,7 +88,7 @@ void MainWindow::play()
 {
   if (player) {
     player->play();
-    event_loop_timer.start(1);
+    event_loop_timer.start(33);
     playing = true;
     playAction->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
   }

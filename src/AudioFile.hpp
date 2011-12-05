@@ -66,7 +66,7 @@ class AudioFile
     /**
      * @brief The filename.
      */
-    const char* filename_;
+    char* filename_;
 
     /**
      * @brief The mode in which the file has been opened (read, write,
