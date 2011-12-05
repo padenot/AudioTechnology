@@ -285,7 +285,7 @@ void MainWindow::setupUi()
   widget->setLayout(mainLayout);
 
   setCentralWidget(widget);
-  setWindowTitle("wav player 0.1");
+  setWindowTitle("WAV player 1.0 RC");
 
   connect(volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(set_volume(int)));
 }
