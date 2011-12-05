@@ -52,7 +52,7 @@ void MainWindow::openfile()
     recorder->insert(new RMS(&MainWindow::rmscallback, this));
 
     QByteArray ba = filepath.toAscii();
-    printf("%s", ba);
+    //printf("%s", ba);
     recorder->open(ba);
     recordAction->setDisabled(false);
 

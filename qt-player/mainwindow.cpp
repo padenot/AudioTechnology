@@ -48,6 +48,12 @@ void MainWindow::openfile()
 
   if(file!=0){
     filepath = file;
+    
+   //if(player){
+   // 	delete player;
+   // 	player = 0;
+   // }
+    
     player = new AudioPlayer(4096);
     player->insert(new RMS(&MainWindow::rmscallback, this));
 

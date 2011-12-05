@@ -10,15 +10,29 @@
   return err;
 
 AudioPlayer::AudioPlayer(const size_t chunk_size)
-  :chunk_size_(chunk_size)
+  :file_(0)
+  ,chunk_size_(chunk_size)
+  ,ring_buffer_(0)
   ,playback_state_(STOPPED)
   ,effect_(0)
   ,volume_(1.0)
-{ }
+
+{   
+}
 
 AudioPlayer::~AudioPlayer()
 {
   unload();
+
+   if(file_){
+	delete file_;
+	file_ = 0;
+  }
+  
+  if(ring_buffer_){
+	delete ring_buffer_;
+	ring_buffer_ = 0;
+  }
 }
 
 int AudioPlayer::play()
@@ -147,8 +161,21 @@ int AudioPlayer::samplerate()
 
 int AudioPlayer::load(const char* file)
 {
+  VAGG_LOG(VAGG_LOG_DEBUG, "file_ %p",file_);
   VAGG_LOG(VAGG_LOG_DEBUG, "Loading %s.", file);
   PaError err;
+
+  if(file_){
+  	VAGG_LOG(VAGG_LOG_DEBUG, "Deleting old file_. %p",file_);
+	delete file_;
+	file_ = 0;
+  }
+  
+  if(ring_buffer_){
+   	VAGG_LOG(VAGG_LOG_DEBUG, "Deleting old ring-buffer.");
+	delete ring_buffer_;
+	ring_buffer_ = 0;
+  }
 
   file_ = new AudioFile(file);
   if ((err = file_->open(AudioFile::Read))) {
